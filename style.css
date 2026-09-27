@@ -1,0 +1,673 @@
+/* ==========================================================================
+   古文 助動詞マスター スタイルシート (style.css)
+   モバイルファースト設計 / クリーン＆アカデミックなUI
+   ========================================================================== */
+
+/* デザイントークン / CSS変数 */
+:root {
+  --color-primary: #1e3a5f;       /* 藍色（メイン） */
+  --color-primary-light: #2c5282; /* 藍色（明） */
+  --color-primary-soft: #ebf4ff;  /* 藍色（背景用淡色） */
+  
+  --color-accent: #c53030;        /* 茜色（アクセント・解答表示用） */
+  --color-accent-soft: #fff5f5;   /* 茜色（背景用） */
+  
+  --color-bg-app: #f7f9fa;        /* アプリ全体背景 */
+  --color-bg-card: #ffffff;       /* カード背景 */
+  --color-bg-cover: #edf2f7;      /* マスカバー背景 */
+  
+  --color-text-main: #2d3748;     /* 本文色 */
+  --color-text-muted: #718096;    /* 補助文色 */
+  --color-border: #e2e8f0;        /* 境界線 */
+  --color-border-dark: #cbd5e0;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-full: 9999px;
+
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* リセット＆ベーススタイル */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: "Zen Kaku Gothic New", -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  background-color: var(--color-bg-app);
+  color: var(--color-text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+/* アプリケーション全体コンテナ（最大幅480pxのスマートフォン表示最適化） */
+.app-container {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+/* アプリヘッダー */
+.app-header {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  color: #ffffff;
+  padding: 20px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+}
+
+.header-inner {
+  text-align: center;
+}
+
+.app-title {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.06em;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.app-subtitle {
+  font-size: 0.78rem;
+  opacity: 0.88;
+  letter-spacing: 0.02em;
+}
+
+/* メインコンテンツ */
+.main-content {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 画面共通 (View) */
+.view {
+  display: none;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.view.active-view {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   1. ホーム画面（一覧表示）
+   ========================================================================== */
+.view-intro {
+  margin-bottom: 12px;
+}
+
+.intro-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  margin-bottom: 4px;
+}
+
+.intro-text {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* 検索ボックス */
+.search-box-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 38px 12px 14px;
+  font-size: 0.92rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: #fcfdfd;
+  color: var(--color-text-main);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.search-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+  background-color: #ffffff;
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+/* 助動詞一覧リスト */
+.jodoushi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 各助動詞カード（リストアイテム） */
+.jodoushi-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--color-bg-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  user-select: none;
+}
+
+.jodoushi-card:hover {
+  border-color: var(--color-primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.jodoushi-card:active {
+  transform: scale(0.98);
+  background-color: #f8fafc;
+}
+
+.card-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.card-name-badge {
+  width: 48px;
+  height: 48px;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  border: 1px solid rgba(30, 58, 95, 0.15);
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.card-meaning {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.type-tag {
+  background-color: #edf2f7;
+  color: #4a5568;
+}
+
+.conn-tag {
+  background-color: #e6fffa;
+  color: #234e52;
+}
+
+.card-arrow {
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  padding-left: 8px;
+}
+
+/* ==========================================================================
+   2. 詳細画面（活用表表示）
+   ========================================================================== */
+.detail-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.back-btn {
+  background-color: #ffffff;
+  border: 1.5px solid var(--color-border);
+  color: var(--color-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.back-btn:active {
+  background-color: var(--color-primary-soft);
+  transform: scale(0.96);
+}
+
+.nav-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.nav-step-btn {
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.nav-step-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary-light);
+}
+
+/* 助動詞ヘッダーカード（タップで全表示） */
+.jodoushi-header-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f7faff 100%);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.jodoushi-header-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.jodoushi-header-card:active {
+  transform: scale(0.99);
+}
+
+.card-hint-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(30, 58, 95, 0.25);
+  animation: pulseHint 2.5s infinite;
+}
+
+@keyframes pulseHint {
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50% { transform: scale(1.03); opacity: 1; }
+}
+
+.header-main-info {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  border-bottom: 1px dashed var(--color-border);
+  padding-bottom: 8px;
+}
+
+.name-container {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.name-label {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.detail-name {
+  font-family: "Shippori Mincho", serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.meaning-box {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.meaning-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  margin-bottom: 2px;
+}
+
+.detail-meaning {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  line-height: 1.4;
+}
+
+/* 操作ガイドテキスト */
+.study-tips {
+  font-size: 0.76rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  margin-bottom: 10px;
+  background-color: #f1f5f9;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* 活用表スタイル */
+.conjugation-table-container {
+  background-color: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+}
+
+.conjugation-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.conjugation-table thead {
+  background-color: var(--color-primary-soft);
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.conjugation-table th {
+  padding: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-align: center;
+}
+
+.th-form {
+  width: 35%;
+  border-right: 1px solid var(--color-border);
+}
+
+.th-answer {
+  width: 65%;
+}
+
+.conjugation-table tbody tr {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.conjugation-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* 活用形名セル（未然形、連用形...） */
+.td-form-name {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #4a5568;
+  background-color: #fafbfc;
+  border-right: 1px solid var(--color-border);
+  padding: 10px 8px;
+  vertical-align: middle;
+}
+
+/* 答えセル */
+.td-answer-cell {
+  padding: 8px 10px;
+  vertical-align: middle;
+}
+
+/* タップ可能な回答マス（カード） */
+.answer-box {
+  min-height: 48px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-normal);
+}
+
+/* 隠れている状態 (Hidden) */
+.answer-box.is-hidden {
+  background-color: var(--color-bg-cover);
+  border: 1.5px dashed var(--color-border-dark);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.answer-box.is-hidden:hover {
+  background-color: #e2e8f0;
+  border-color: #a0aec0;
+}
+
+.answer-box.is-hidden:active {
+  transform: scale(0.97);
+}
+
+.answer-box.is-hidden .answer-text {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px) scale(0.9);
+}
+
+.answer-box.is-hidden .cover-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #a0aec0;
+  letter-spacing: 0.04em;
+}
+
+/* 表示された状態 (Revealed) - ふわっとアニメーション */
+.answer-box.is-revealed {
+  background-color: var(--color-accent-soft);
+  border: 1.5px solid rgba(197, 48, 48, 0.35);
+  box-shadow: var(--shadow-sm);
+  animation: revealPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes revealPop {
+  0% {
+    transform: scale(0.94);
+    opacity: 0.7;
+    background-color: #ffe3e3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    background-color: var(--color-accent-soft);
+  }
+}
+
+.answer-box.is-revealed .cover-placeholder {
+  display: none;
+}
+
+.answer-box.is-revealed .answer-text {
+  opacity: 1;
+  visibility: visible;
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-accent);
+  letter-spacing: 0.08em;
+  transform: translateY(0) scale(1);
+  transition: all var(--transition-normal);
+}
+
+/* 活用なし（「〇」など）の特別スタイル */
+.answer-box.is-none {
+  background-color: #f8fafc;
+  border: 1px solid var(--color-border);
+  cursor: default;
+}
+
+.answer-box.is-none .cover-placeholder {
+  display: none;
+}
+
+.answer-box.is-none .answer-text {
+  opacity: 1;
+  visibility: visible;
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #a0aec0;
+}
+
+/* 一括操作バー */
+.action-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn {
+  width: 100%;
+  padding: 13px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-light);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background-color: #edf2f7;
+  color: #4a5568;
+}
+
+.btn-secondary:hover {
+  background-color: #e2e8f0;
+}
+
+/* フッター */
+.app-footer {
+  text-align: center;
+  padding: 18px 16px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+  margin-top: auto;
+}
+
+/* PC等大画面時の補助スタイル */
+@media (min-width: 640px) {
+  body {
+    padding: 30px 0;
+    background-color: #edf2f7;
+  }
+
+  .app-container {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    min-height: calc(100vh - 60px);
+  }
+}

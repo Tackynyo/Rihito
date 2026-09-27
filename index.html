@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1a2d42">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>古文 助動詞マスター | 活用暗記アプリ</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Shippori+Mincho:wght@600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- アプリ共通ヘッダー -->
+    <header class="app-header">
+      <div class="header-inner">
+        <h1 class="app-title">古文 助動詞マスター</h1>
+        <p class="app-subtitle">スマートフォンでサクサク覚える活用暗記シート</p>
+      </div>
+    </header>
+
+    <!-- メインコンテンツ領域 -->
+    <main class="main-content">
+      
+      <!-- 画面1: ホーム一覧画面 -->
+      <section id="home-view" class="view active-view" aria-label="助動詞一覧">
+        <div class="view-intro">
+          <div class="intro-badge">学習モード</div>
+          <p class="intro-text">学習したい助動詞をタップして、活用をテストしましょう。</p>
+        </div>
+
+        <!-- 簡易検索・絞り込み入力欄 -->
+        <div class="search-box-wrapper">
+          <input type="text" id="search-input" class="search-input" placeholder="助動詞名や意味で検索 (例: 過去, る)..." autocomplete="off">
+          <button id="clear-search-btn" class="clear-search-btn" aria-label="検索クリア" hidden>&times;</button>
+        </div>
+
+        <!-- 助動詞リスト表示領域 -->
+        <div id="jodoushi-list" class="jodoushi-list" role="list">
+          <!-- data.js から動的に生成 -->
+        </div>
+      </section>
+
+      <!-- 画面2: 活用表詳細画面 -->
+      <section id="detail-view" class="view" aria-label="活用表詳細" hidden>
+        <!-- 戻るナビゲーション -->
+        <nav class="detail-nav">
+          <button id="back-to-home-btn" class="back-btn" aria-label="一覧に戻る">
+            <span class="icon">&larr;</span> 一覧に戻る
+          </button>
+          <div class="nav-actions">
+            <button id="prev-item-btn" class="nav-step-btn" title="前の助動詞">&lt; 前へ</button>
+            <button id="next-item-btn" class="nav-step-btn" title="次の助動詞">次へ &gt;</button>
+          </div>
+        </nav>
+
+        <!-- 助動詞ヘッダーカード (タップで一括表示) -->
+        <div id="jodoushi-header-card" class="jodoushi-header-card" role="button" tabindex="0" title="ここをタップすると全マスを一括表示します">
+          <div class="card-hint-badge">
+            <span class="sparkle-icon">💡</span>
+            <span>ここをタップで全答え表示</span>
+          </div>
+          
+          <div class="header-main-info">
+            <div class="name-container">
+              <span class="name-label">原形</span>
+              <h2 id="detail-name" class="detail-name">る</h2>
+            </div>
+            <div class="meta-tags" id="detail-meta-tags">
+              <span id="detail-type" class="tag type-tag">下二段型</span>
+              <span id="detail-connection" class="tag conn-tag">未然形接続</span>
+            </div>
+          </div>
+
+          <div class="meaning-box">
+            <span class="meaning-label">意味</span>
+            <p id="detail-meaning" class="detail-meaning">受身・尊敬・自発・可能</p>
+          </div>
+        </div>
+
+        <!-- 操作ガイドメッセージ -->
+        <div class="study-tips">
+          <span>各マスをタップで答えを表示 / 原形タップで全表示</span>
+        </div>
+
+        <!-- 活用表 (6行) -->
+        <div class="conjugation-table-container">
+          <table class="conjugation-table" aria-label="活用表">
+            <thead>
+              <tr>
+                <th scope="col" class="th-form">活用形</th>
+                <th scope="col" class="th-answer">活用</th>
+              </tr>
+            </thead>
+            <tbody id="conjugation-tbody">
+              <!-- data.js から動的に生成 -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 一括操作コントロールバー -->
+        <div class="action-bar">
+          <button id="reveal-all-btn" class="btn btn-primary">
+            <span>✨ すべての答えを表示</span>
+          </button>
+          <button id="reset-all-btn" class="btn btn-secondary">
+            <span>🔄 もう一度隠す（復習）</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="app-footer">
+      <p>高校古文 助動詞暗記ツール &copy; Rihito</p>
+    </footer>
+  </div>
+
+  <!-- スクリプト読み込み: data.js (データ定義) → app.js (ロジック) -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
