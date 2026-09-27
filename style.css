@@ -1,6 +1,6 @@
 /* ==========================================================================
    古文 助動詞マスター スタイルシート (style.css)
-   モバイルファースト設計 / 接続別・8行×2列表・意味暗記スライド
+   モバイルファースト設計 / 接続別・8行×2列表・本のページめくりアニメーション
    ========================================================================== */
 
 /* デザイントークン / CSS変数 */
@@ -24,6 +24,7 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 10px 18px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --shadow-page-turn: -18px 10px 30px rgba(0, 0, 0, 0.22);
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -69,7 +70,7 @@ body {
 .app-header {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   color: #ffffff;
-  padding: 16px 16px 14px 16px;
+  padding: 14px 16px 12px 16px;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -82,14 +83,14 @@ body {
 
 .app-title {
   font-family: "Shippori Mincho", serif;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   letter-spacing: 0.06em;
   font-weight: 800;
   margin-bottom: 2px;
 }
 
 .app-subtitle {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   opacity: 0.88;
   letter-spacing: 0.02em;
 }
@@ -97,7 +98,7 @@ body {
 /* メインコンテンツ */
 .main-content {
   flex: 1;
-  padding: 16px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -121,7 +122,7 @@ body {
 }
 
 .view-intro {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .intro-badge {
@@ -153,9 +154,9 @@ body {
   background-color: #ffffff;
   border: 1.5px solid var(--color-border);
   color: var(--color-primary);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  padding: 7px 14px;
+  padding: 6px 13px;
   border-radius: var(--radius-full);
   display: inline-flex;
   align-items: center;
@@ -171,7 +172,7 @@ body {
 }
 
 .sub-nav {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 /* ==========================================================================
@@ -302,13 +303,13 @@ body {
 }
 
 /* ==========================================================================
-   画面③・④・⑤: 学習画面（8行×2列 活用表 / 主な意味 / スライド）
+   画面③・④・⑤: 学習画面（8行×2列 活用表 / 主な意味 / 本のページめくり）
    ========================================================================== */
 .study-top-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .study-step-badge {
@@ -316,45 +317,59 @@ body {
   font-weight: 700;
   color: var(--color-primary);
   background-color: var(--color-primary-soft);
-  padding: 4px 12px;
+  padding: 3px 12px;
   border-radius: var(--radius-full);
   border: 1px solid rgba(30, 58, 95, 0.15);
 }
 
-/* 学習カード表示領域 */
+/* ページめくり用の3Dパースペクティブコンテナ */
 .study-deck-container {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-bottom: 74px; /* 下部ドック用の余白 */
+  margin-bottom: 70px; /* 下部ドック用の余白 */
   touch-action: pan-y;
   position: relative;
-  min-height: 480px;
+  min-height: 460px;
+  perspective: 1200px;
+  perspective-origin: 15% 50%; /* 本の背表紙（左側）を意識した視点 */
 }
 
+/* カード共通スタイル（本の一枚のページ） */
 .study-card {
   background-color: #ffffff;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 14px;
+  padding: 12px;
   box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
-  animation: slideInCard 0.28s cubic-bezier(0.2, 0, 0.2, 1);
+  width: 100%;
+  position: relative;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  transform-origin: left center; /* 左側の綴じ目を軸にめくる */
 }
 
-@keyframes slideInCard {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ==========================================================================
+   要件1対応: 8行×2列 活用表カード（上部の助動詞・見出しを削除して上に詰める）
+   ========================================================================== */
+.table-study-card {
+  padding: 8px 10px 12px 10px;
 }
 
-/* カード共通ヘッダー */
+.table-study-card .table-wrapper {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+/* 主な意味カード用ヘッダー */
 .card-header-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px dashed var(--color-border);
 }
 
@@ -386,9 +401,143 @@ body {
 }
 
 /* ==========================================================================
-   ③ 8行×2列 活用表のスタイル
-   右列: 形の名称（基本形〜活用の型）
-   左列: 実際の活用（1行目「基本形」と8行目「活用の型」は常時表示、2〜7行目はタップで表示）
+   要件2対応: 本のページめくりアニメーション（3D Flip & Paper Curl）
+   ========================================================================== */
+
+/* 1. 次へ進む（Forward）: 現在のページが左へめくれて消える */
+.study-card.page-turning-forward {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  animation: bookPageTurnForward 0.44s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+/* めくれる紙のカーブ陰影 */
+.study-card.page-turning-forward::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(to right, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 35%, rgba(255,255,255,0.45) 65%, rgba(0,0,0,0.2) 100%);
+  animation: pageTurnShadow 0.44s ease-in-out forwards;
+  pointer-events: none;
+}
+
+@keyframes bookPageTurnForward {
+  0% {
+    transform: rotateY(0deg) translateZ(0);
+    box-shadow: var(--shadow-md);
+  }
+  35% {
+    transform: rotateY(-38deg) skewY(-1.8deg) scale(0.98);
+    box-shadow: -14px 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  70% {
+    transform: rotateY(-82deg) skewY(-2deg) scale(0.96);
+    box-shadow: -22px 12px 30px rgba(0, 0, 0, 0.28);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(-112deg) skewY(-2.5deg) scale(0.92);
+    box-shadow: -32px 16px 40px rgba(0, 0, 0, 0.32);
+    opacity: 0;
+  }
+}
+
+@keyframes pageTurnShadow {
+  0% { opacity: 0; }
+  35% { opacity: 0.65; }
+  100% { opacity: 0.9; }
+}
+
+/* 次へ進む時、下から現れる新しいページ */
+.study-card.page-revealing-forward {
+  position: relative;
+  z-index: 5;
+  animation: bookPageRevealUnderneath 0.44s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+@keyframes bookPageRevealUnderneath {
+  0% {
+    transform: scale(0.96) translateZ(-25px);
+    filter: brightness(0.82);
+    box-shadow: inset 10px 0 20px rgba(0, 0, 0, 0.15);
+  }
+  60% {
+    filter: brightness(0.95);
+  }
+  100% {
+    transform: scale(1) translateZ(0);
+    filter: brightness(1);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* 2. 前へ戻る（Backward）: 前のページが左からめくられて戻ってくる */
+.study-card.page-revealing-backward {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  animation: bookPageTurnBackward 0.44s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.study-card.page-revealing-backward::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(to left, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 35%, rgba(255,255,255,0.45) 65%, rgba(0,0,0,0.2) 100%);
+  animation: pageTurnShadowBackward 0.44s ease-in-out forwards;
+  pointer-events: none;
+}
+
+@keyframes bookPageTurnBackward {
+  0% {
+    transform: rotateY(-112deg) skewY(-2.5deg) scale(0.92);
+    box-shadow: -32px 16px 40px rgba(0, 0, 0, 0.32);
+    opacity: 0;
+  }
+  40% {
+    transform: rotateY(-72deg) skewY(-1.5deg) scale(0.96);
+    box-shadow: -22px 12px 30px rgba(0, 0, 0, 0.28);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(0deg) skewY(0) scale(1);
+    box-shadow: var(--shadow-md);
+    opacity: 1;
+  }
+}
+
+@keyframes pageTurnShadowBackward {
+  0% { opacity: 0.9; }
+  65% { opacity: 0.4; }
+  100% { opacity: 0; }
+}
+
+/* 前へ戻る時、下のページが背後に沈む */
+.study-card.page-hiding-backward {
+  position: relative;
+  z-index: 5;
+  animation: bookPageHideUnderneath 0.44s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+@keyframes bookPageHideUnderneath {
+  0% {
+    transform: scale(1) translateZ(0);
+    filter: brightness(1);
+  }
+  100% {
+    transform: scale(0.96) translateZ(-25px);
+    filter: brightness(0.82);
+  }
+}
+
+/* ==========================================================================
+   ③ 8行×2列 活用表の内部スタイル
    ========================================================================== */
 .table-wrapper {
   border: 2px solid var(--color-primary);
@@ -396,7 +545,6 @@ body {
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   background-color: #ffffff;
-  margin-bottom: 12px;
 }
 
 .table-8x2 {
@@ -416,7 +564,7 @@ body {
 /* 左の列（回答・値の列）: 62% */
 .td-answer-col {
   width: 62%;
-  padding: 6px 8px;
+  padding: 5px 8px;
   vertical-align: middle;
   text-align: center;
   border-right: 2px solid var(--color-border);
@@ -425,7 +573,7 @@ body {
 /* 右の列（見出し・ラベルの列）: 38% */
 .th-label-col {
   width: 38%;
-  padding: 8px 6px;
+  padding: 6px 6px;
   vertical-align: middle;
   text-align: center;
   background-color: #f7fafc;
@@ -438,13 +586,13 @@ body {
 .kihon-trigger-cell {
   background-color: #f8fbff;
   border-radius: var(--radius-sm);
-  padding: 4px 6px;
+  padding: 3px 6px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid rgba(30, 58, 95, 0.2);
+  border: 1.5px solid rgba(30, 58, 95, 0.25);
   transition: all var(--transition-fast);
 }
 
@@ -454,7 +602,7 @@ body {
 }
 
 .kihon-trigger-cell:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .kihon-char {
@@ -466,21 +614,21 @@ body {
 }
 
 .kihon-tap-hint {
-  font-size: 0.64rem;
+  font-size: 0.62rem;
   font-weight: 700;
   color: #ffffff;
   background-color: var(--color-primary);
   padding: 1px 6px;
   border-radius: var(--radius-full);
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 /* 8行目（活用の型）のスタイル: 常に表示 */
 .type-static-cell {
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--color-primary);
-  padding: 6px;
+  padding: 5px;
   background-color: #f7fafc;
   border-radius: var(--radius-sm);
   display: flex;
@@ -490,7 +638,7 @@ body {
 
 /* 2〜7行目のマス（初期は空白、タップで表示） */
 .cell-box {
-  min-height: 42px;
+  min-height: 38px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
@@ -511,7 +659,7 @@ body {
 }
 
 .cell-box.is-hidden:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .cell-box.is-hidden .cell-answer-text {
@@ -519,7 +667,7 @@ body {
 }
 
 .cell-box.is-hidden .cell-cover-text {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: #a0aec0;
   display: flex;
@@ -587,7 +735,7 @@ body {
 }
 
 .meaning-slot-box {
-  min-height: 54px;
+  min-height: 52px;
   border-radius: var(--radius-md);
   padding: 10px 14px;
   display: flex;
@@ -781,7 +929,7 @@ body {
 /* フッター */
 .app-footer {
   text-align: center;
-  padding: 18px 16px;
+  padding: 16px;
   font-size: 0.75rem;
   color: var(--color-text-muted);
   border-top: 1px solid var(--color-border);

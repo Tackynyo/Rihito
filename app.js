@@ -4,9 +4,9 @@
  * 仕様:
  * ① ホーム画面: 接続ごとの一覧（未然形、連用形、終止形、体言・連体形・一部助詞、その他）
  * ② グループ画面: 接続ごとの助動詞リスト（意味・用法は記載しない）
- * ③ 活用表: 8行×2列（右列: ラベル、左列: 回答。1行目「基本形」と8行目「活用の型」は常時表示、2〜7行目はタップで表示。1行目タップで全表示）
+ * ③ 活用表: 8行×2列（右列: ラベル、左列: 回答。1行目「基本形」と8行目「活用の型」は常時表示、2〜7行目はタップで表示。1行目タップで全表示。上部見出しは削除して上詰め表示）
  * ④ 主な意味: 空白の数は意味の数と完全に一致。タップで表示。
- * ⑤ 下にスライド or 下ボタンで、活用表 → 主な意味 → 次の助動詞活用表 → 主な意味 ... と順番に遷移。
+ * ⑤ 下にスライド or 下ボタンで、本のページをめくるような3Dアニメーションで遷移。
  */
 
 (function () {
@@ -49,6 +49,7 @@
   let currentGroup = null;
   let currentStepIndex = 0; // 0, 1, 2, 3 ... (各助動詞ごとに 活用表(偶数) と 主な意味(奇数))
   let totalSteps = 0;
+  let isAnimating = false;
 
   /**
    * 画面の切り替え
@@ -153,72 +154,118 @@
   }
 
   // =========================================================================
-  // ③・④・⑤ 学習画面: 8行×2列表・主な意味・スライド遷移
+  // ③・④・⑤ 学習画面: 8行×2列表・主な意味・本のページめくりアニメーション
   // =========================================================================
   function startStudy(group) {
     currentGroup = group;
     currentStepIndex = 0;
-    // 各助動詞につき [活用表] と [主な意味] の2画面
     totalSteps = group.items.length * 2;
-    renderCurrentStep();
+    isAnimating = false;
+    dom.studyDeckContainer.innerHTML = "";
+    renderCurrentStep(null);
     switchView("study");
   }
 
   /**
-   * 現在のステップ（活用表 or 主な意味 or 完了画面）をレンダリング
+   * 現在のステップカードをページめくりアニメーションで切り替える
+   * @param {'forward'|'backward'|null} direction 
    */
-  function renderCurrentStep() {
-    dom.studyDeckContainer.innerHTML = "";
+  function renderCurrentStep(direction = null) {
+    // ヘッダーバッジと下部ドックの即時更新
+    updateHeaderAndDock();
 
-    // 完了ステップの場合
-    if (currentStepIndex >= totalSteps) {
-      renderCompletionScreen();
-      updateNavigationControls();
+    const currentCard = dom.studyDeckContainer.querySelector(".study-card");
+    const newCard = createStepCard(currentStepIndex);
+
+    // 初回表示またはアニメーションなしの場合
+    if (!currentCard || !direction) {
+      dom.studyDeckContainer.innerHTML = "";
+      dom.studyDeckContainer.appendChild(newCard);
+      isAnimating = false;
       return;
     }
 
-    const verbIndex = Math.floor(currentStepIndex / 2);
-    const currentVerb = currentGroup.items[verbIndex];
-    const isConjugation = currentStepIndex % 2 === 0;
+    isAnimating = true;
 
-    // 上部バッジ更新
-    dom.studyStepBadge.textContent = `${currentVerb.name} [${isConjugation ? "活用表" : "主な意味"}] (${currentStepIndex + 1} / ${totalSteps})`;
+    if (direction === "forward") {
+      // =====================================================================
+      // 次へ進む: 現在のページが左へめくれ、下から新しいページが現れる
+      // =====================================================================
+      currentCard.classList.add("page-turning-forward");
+      newCard.classList.add("page-revealing-forward");
 
-    if (isConjugation) {
-      // ③ 8行×2列 活用表のレンダリング
-      renderConjugationCard(currentVerb);
-    } else {
-      // ④ 主な意味画面のレンダリング
-      renderMeaningsCard(currentVerb);
+      // 新しいカードを下に挿入
+      dom.studyDeckContainer.insertBefore(newCard, currentCard);
+
+      const finishForward = () => {
+        currentCard.removeEventListener("animationend", finishForward);
+        if (currentCard.parentNode) {
+          currentCard.parentNode.removeChild(currentCard);
+        }
+        newCard.classList.remove("page-revealing-forward");
+        isAnimating = false;
+      };
+
+      currentCard.addEventListener("animationend", finishForward);
+      setTimeout(finishForward, 480);
+
+    } else if (direction === "backward") {
+      // =====================================================================
+      // 前へ戻る: 前のページが左からめくられて戻り、現在のページを覆う
+      // =====================================================================
+      currentCard.classList.add("page-hiding-backward");
+      newCard.classList.add("page-revealing-backward");
+
+      // 新しいカードを最前面に追加
+      dom.studyDeckContainer.appendChild(newCard);
+
+      const finishBackward = () => {
+        newCard.removeEventListener("animationend", finishBackward);
+        if (currentCard.parentNode) {
+          currentCard.parentNode.removeChild(currentCard);
+        }
+        newCard.classList.remove("page-revealing-backward");
+        isAnimating = false;
+      };
+
+      newCard.addEventListener("animationend", finishBackward);
+      setTimeout(finishBackward, 480);
     }
-
-    updateNavigationControls();
   }
 
   /**
-   * ③ 8行×2列の表を生成
-   * 右列:「基本形」「未然形」「連用形」「終止形」「連体形」「已然形」「命令形」「活用の型」
-   * 左列: 対応する活用。
+   * 指定ステップのカード要素を生成して返す
+   */
+  function createStepCard(stepIndex) {
+    if (stepIndex >= totalSteps) {
+      return createCompletionCard();
+    }
+
+    const verbIndex = Math.floor(stepIndex / 2);
+    const currentVerb = currentGroup.items[verbIndex];
+    const isConjugation = stepIndex % 2 === 0;
+
+    if (isConjugation) {
+      // ③ 8行×2列 活用表カード（上詰め・ヘッダー削除）
+      return createConjugationCard(currentVerb);
+    } else {
+      // ④ 主な意味カード（空白数は意味数と完全一致）
+      return createMeaningsCard(currentVerb);
+    }
+  }
+
+  /**
+   * ③ 8行×2列 活用表カードの生成
+   * 要件修正: 上部の助動詞や「活用表(8行)」表示は削除し、表を上に詰めて表示。
    * 1行目「基本形」と8行目「活用の型」は常時表示。
    * 2〜7行目は最初は空白、タップで表示。
    * 1行目の基本形タップで全マス一括表示。
    */
-  function renderConjugationCard(verb) {
+  function createConjugationCard(verb) {
     const card = document.createElement("div");
-    card.className = "study-card";
+    card.className = "study-card table-study-card";
 
-    // カードヘッダー
-    card.innerHTML = `
-      <div class="card-header-bar">
-        <div class="card-title-group">
-          <span class="card-target-name">${verb.name}</span>
-          <span class="card-mode-badge">活用表（8行）</span>
-        </div>
-        <span class="card-hint-text">基本形タップで全表示</span>
-      </div>
-    `;
-
-    // 8行×2列 テーブルラッパー
+    // 8行×2列 テーブルラッパー（ヘッダーなしで最上部に配置）
     const tableWrapper = document.createElement("div");
     tableWrapper.className = "table-wrapper";
 
@@ -227,8 +274,6 @@
     table.setAttribute("aria-label", `${verb.name}の活用表`);
 
     const tbody = document.createElement("tbody");
-
-    // 2〜7行の隠しマス一覧を保持（一括表示用）
     const hiddenCells = [];
 
     TABLE_ROWS.forEach((rowDef) => {
@@ -263,10 +308,9 @@
             setTimeout(() => {
               box.classList.remove("is-hidden");
               box.classList.add("is-revealed");
-            }, i * 35);
+            }, i * 30);
           });
-          // 演出
-          kihonCell.style.transform = "scale(0.95)";
+          kihonCell.style.transform = "scale(0.94)";
           setTimeout(() => { kihonCell.style.transform = ""; }, 150);
         };
 
@@ -325,7 +369,6 @@
         tdLeft.appendChild(box);
       }
 
-      // 要件③: 左の列が値、右の列がラベル
       tr.appendChild(tdLeft);
       tr.appendChild(thRight);
       tbody.appendChild(tr);
@@ -335,7 +378,7 @@
     tableWrapper.appendChild(table);
     card.appendChild(tableWrapper);
 
-    // クイック操作（すべて表示 / リセット）
+    // クイック操作ボタン（すべて表示 / もう一度隠す）
     const quickBar = document.createElement("div");
     quickBar.className = "table-quick-actions";
     quickBar.innerHTML = `
@@ -358,20 +401,20 @@
     });
 
     card.appendChild(quickBar);
-    dom.studyDeckContainer.appendChild(card);
+    return card;
   }
 
   /**
-   * ④ 主な意味画面のレンダリング
+   * ④ 主な意味カードの生成
    * 空白の数は「主な意味」の数と完全に一致（例: き=1つ、べし=6つ）
    */
-  function renderMeaningsCard(verb) {
+  function createMeaningsCard(verb) {
     const card = document.createElement("div");
-    card.className = "study-card";
+    card.className = "study-card meanings-study-card";
 
     const meaningCount = verb.meanings.length;
 
-    // カードヘッダー
+    // カードヘッダー（どの助動詞の意味かを表示）
     card.innerHTML = `
       <div class="card-header-bar">
         <div class="card-title-group">
@@ -385,7 +428,6 @@
     // 意味スロット一覧コンテナ
     const container = document.createElement("div");
     container.className = "meanings-container";
-
     const hiddenSlots = [];
 
     verb.meanings.forEach((meaning, index) => {
@@ -453,15 +495,13 @@
     });
 
     card.appendChild(quickBar);
-    dom.studyDeckContainer.appendChild(card);
+    return card;
   }
 
   /**
-   * グループ完了画面のレンダリング
+   * グループ完了画面カードの生成
    */
-  function renderCompletionScreen() {
-    dom.studyStepBadge.textContent = "学習完了！";
-
+  function createCompletionCard() {
     const card = document.createElement("div");
     card.className = "study-card complete-card";
 
@@ -481,69 +521,77 @@
 
     card.querySelector("#restart-group-btn").addEventListener("click", () => {
       currentStepIndex = 0;
-      renderCurrentStep();
+      renderCurrentStep("backward");
     });
 
     card.querySelector("#back-to-group-list-btn").addEventListener("click", () => {
       switchView("group");
     });
 
-    dom.studyDeckContainer.appendChild(card);
+    return card;
   }
 
   /**
-   * ⑤ 下部ドック操作の更新（下ボタン / 上ボタン）
+   * 上部バッジと下部ドック操作の更新
    */
-  function updateNavigationControls() {
+  function updateHeaderAndDock() {
+    // 完了ステップの場合
+    if (currentStepIndex >= totalSteps) {
+      dom.studyStepBadge.textContent = "学習完了！";
+      dom.dockPrevBtn.disabled = false;
+      dom.dockNextBtn.style.display = "none";
+      dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">全ステップ終了</span>`;
+      return;
+    }
+
+    const verbIndex = Math.floor(currentStepIndex / 2);
+    const currentVerb = currentGroup.items[verbIndex];
+    const isConjugation = currentStepIndex % 2 === 0;
+
+    // 上部バッジ更新
+    dom.studyStepBadge.textContent = `${currentVerb.name} [${isConjugation ? "活用表" : "主な意味"}] (${currentStepIndex + 1} / ${totalSteps})`;
+
     // 上ボタン（前へ）
     dom.dockPrevBtn.disabled = currentStepIndex <= 0;
 
     // 下ボタン（次へ）
-    if (currentStepIndex >= totalSteps) {
-      dom.dockNextBtn.style.display = "none";
-      dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">全ステップ終了</span>`;
+    dom.dockNextBtn.style.display = "flex";
+    if (isConjugation) {
+      dom.dockNextBtn.querySelector(".dock-text").textContent = "主な意味へ";
+      dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">ページをめくって意味へ</span>`;
     } else {
-      dom.dockNextBtn.style.display = "flex";
-      
-      const isConjugation = currentStepIndex % 2 === 0;
-      const verbIndex = Math.floor(currentStepIndex / 2);
-      const currentVerb = currentGroup.items[verbIndex];
-
-      if (isConjugation) {
-        dom.dockNextBtn.querySelector(".dock-text").textContent = "主な意味へ";
-        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">下にスライドで意味へ</span>`;
+      const nextVerbIndex = verbIndex + 1;
+      if (nextVerbIndex < currentGroup.items.length) {
+        const nextVerb = currentGroup.items[nextVerbIndex];
+        dom.dockNextBtn.querySelector(".dock-text").textContent = `「${nextVerb.name}」へ`;
+        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">ページをめくって次の助動詞へ</span>`;
       } else {
-        const nextVerbIndex = verbIndex + 1;
-        if (nextVerbIndex < currentGroup.items.length) {
-          const nextVerb = currentGroup.items[nextVerbIndex];
-          dom.dockNextBtn.querySelector(".dock-text").textContent = `「${nextVerb.name}」へ`;
-          dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">下にスライドで次の助動詞へ</span>`;
-        } else {
-          dom.dockNextBtn.querySelector(".dock-text").textContent = "完了へ";
-          dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">下にスライドで完了</span>`;
-        }
+        dom.dockNextBtn.querySelector(".dock-text").textContent = "完了へ";
+        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">ページをめくって完了</span>`;
       }
     }
   }
 
   /**
-   * 次のステップへ進む（下へスライド / 下ボタン）
+   * 次のステップへ進む（下へスライド / 下ボタン）: 本のページめくり (Forward)
    */
   function goToNextStep() {
+    if (isAnimating) return;
     if (currentStepIndex < totalSteps) {
       currentStepIndex++;
-      renderCurrentStep();
+      renderCurrentStep("forward");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 
   /**
-   * 前のステップへ戻る（上へスライド / 上ボタン）
+   * 前のステップへ戻る（上へスライド / 上ボタン）: 本のページめくり (Backward)
    */
   function goToPrevStep() {
+    if (isAnimating) return;
     if (currentStepIndex > 0) {
       currentStepIndex--;
-      renderCurrentStep();
+      renderCurrentStep("backward");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
@@ -572,13 +620,13 @@
         const deltaX = e.changedTouches[0].clientX - touchStartX;
         const duration = Date.now() - touchStartTime;
 
-        // 縦方向のスワイプ判定（横方向の誤動作を防ぐため abs(deltaY) > abs(deltaX) * 1.5）
-        if (Math.abs(deltaY) > 50 && Math.abs(deltaY) > Math.abs(deltaX) * 1.3 && duration < 600) {
-          if (deltaY < -40) {
-            // 指を上にスワイプ（画面を下へスクロールして次へ進む操作）
+        // 縦方向のスワイプ判定
+        if (Math.abs(deltaY) > 45 && Math.abs(deltaY) > Math.abs(deltaX) * 1.2 && duration < 600) {
+          if (deltaY < -35) {
+            // 指を上にスワイプ（画面を下へめくって次へ進む）
             goToNextStep();
-          } else if (deltaY > 40) {
-            // 指を下にスワイプ（前の画面に戻る操作）
+          } else if (deltaY > 35) {
+            // 指を下にスワイプ（前のページへ戻る）
             goToPrevStep();
           }
         }
