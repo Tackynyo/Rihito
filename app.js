@@ -6,7 +6,8 @@
  * ② グループ画面: 接続ごとの助動詞リスト（意味・用法は記載しない）
  * ③ 活用表: 8行×2列（右列: ラベル、左列: 回答。1行目「基本形」と8行目「活用の型」は常時表示、2〜7行目はタップで表示。1行目タップで全表示。上部見出しは削除して上詰め表示）
  * ④ 主な意味: 空白の数は意味の数と完全に一致。タップで表示。
- * ⑤ 右にスライド or 右ボタン（次へ）で、本のページをめくるような3Dアニメーションで遷移。
+ * ⑤ 左にスライド（スワイプ） or 次へボタンで、本のページをめくるような3Dアニメーションで遷移。
+ * ⑥ 画面上部のヘッダー（ネイビー部分含む）をタップするといつでもホーム画面に戻る。
  */
 
 (function () {
@@ -26,6 +27,7 @@
 
   // DOM要素のキャッシュ
   const dom = {
+    appHeaderNav: document.getElementById("app-header-nav"),
     homeView: document.getElementById("home-view"),
     groupView: document.getElementById("group-view"),
     studyView: document.getElementById("study-view"),
@@ -532,7 +534,7 @@
   }
 
   /**
-   * 上部バッジと下部ドック操作の更新（右ボタン / 左ボタン、右スライド表記）
+   * 上部バッジと下部ドック操作の更新（右ボタン: 次へ、左ボタン: 前へ）
    */
   function updateHeaderAndDock() {
     // 完了ステップの場合
@@ -558,22 +560,22 @@
     dom.dockNextBtn.style.display = "flex";
     if (isConjugation) {
       dom.dockNextBtn.querySelector(".dock-text").textContent = "主な意味へ";
-      dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">右にスライドで意味へ</span>`;
+      dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">左にスライドで意味へ</span>`;
     } else {
       const nextVerbIndex = verbIndex + 1;
       if (nextVerbIndex < currentGroup.items.length) {
         const nextVerb = currentGroup.items[nextVerbIndex];
         dom.dockNextBtn.querySelector(".dock-text").textContent = `「${nextVerb.name}」へ`;
-        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">右にスライドで次の助動詞へ</span>`;
+        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">左にスライドで次の助動詞へ</span>`;
       } else {
         dom.dockNextBtn.querySelector(".dock-text").textContent = "完了へ";
-        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">右にスライドで完了</span>`;
+        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">左にスライドで完了</span>`;
       }
     }
   }
 
   /**
-   * 次のステップへ進む（右へスライド / 右ボタン）: 本のページめくり (Forward)
+   * 次のステップへ進む: 本のページめくり (Forward)
    */
   function goToNextStep() {
     if (isAnimating) return;
@@ -585,7 +587,7 @@
   }
 
   /**
-   * 前のステップへ戻る（左へスライド / 左ボタン）: 本のページめくり (Backward)
+   * 前のステップへ戻る: 本のページめくり (Backward)
    */
   function goToPrevStep() {
     if (isAnimating) return;
@@ -597,7 +599,7 @@
   }
 
   // =========================================================================
-  // タッチスワイプ（指で右にスライドで次へ・左にスライドで前へ）の検知
+  // タッチスワイプ（指を左方向にスライドで次へ・右方向にスライドで前へ）の検知
   // =========================================================================
   function setupSwipeHandlers() {
     let touchStartY = 0;
@@ -620,13 +622,13 @@
         const deltaY = e.changedTouches[0].clientY - touchStartY;
         const duration = Date.now() - touchStartTime;
 
-        // 横方向のスワイプ判定（上下の意図しないスクロールと区別するため abs(deltaX) > abs(deltaY) * 1.2）
+        // 横方向のスワイプ判定（上下の微小なスクロールと区別するため abs(deltaX) > abs(deltaY) * 1.2）
         if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2 && duration < 600) {
-          if (deltaX > 35) {
-            // 指を右にスライド（本のページをめくって次へ進む）
+          if (deltaX < -35) {
+            // 指を左方向にスライド（次のページへ進む）
             goToNextStep();
-          } else if (deltaX < -35) {
-            // 指を左にスライド（前のページへ戻る）
+          } else if (deltaX > 35) {
+            // 指を右方向にスライド（前のページへ戻る）
             goToPrevStep();
           }
         }
@@ -638,6 +640,19 @@
   // イベントリスナー登録
   // =========================================================================
   function setupEventListeners() {
+    // 画面上部ヘッダー（ネイビー部分含む）タップでホーム画面に戻る
+    if (dom.appHeaderNav) {
+      dom.appHeaderNav.addEventListener("click", () => {
+        switchView("home");
+      });
+      dom.appHeaderNav.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          switchView("home");
+        }
+      });
+    }
+
     // 画面遷移ボタン
     dom.backToHomeBtn.addEventListener("click", () => {
       switchView("home");

@@ -66,7 +66,7 @@ body {
   position: relative;
 }
 
-/* アプリヘッダー */
+/* アプリヘッダー（タップでホーム画面に戻る） */
 .app-header {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   color: #ffffff;
@@ -75,6 +75,17 @@ body {
   top: 0;
   z-index: 100;
   box-shadow: var(--shadow-md);
+  cursor: pointer;
+  user-select: none;
+  transition: opacity var(--transition-fast);
+}
+
+.app-header:hover {
+  opacity: 0.96;
+}
+
+.app-header:active {
+  opacity: 0.88;
 }
 
 .header-inner {
