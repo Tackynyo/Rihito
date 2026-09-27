@@ -1,384 +1,618 @@
 /**
  * 古文 助動詞マスター アプリケーションロジック (app.js)
- * Vanilla JavaScript (フレームワーク不使用 / ゼロ依存)
+ * 
+ * 仕様:
+ * ① ホーム画面: 接続ごとの一覧（未然形、連用形、終止形、体言・連体形・一部助詞、その他）
+ * ② グループ画面: 接続ごとの助動詞リスト（意味・用法は記載しない）
+ * ③ 活用表: 8行×2列（右列: ラベル、左列: 回答。1行目「基本形」と8行目「活用の型」は常時表示、2〜7行目はタップで表示。1行目タップで全表示）
+ * ④ 主な意味: 空白の数は意味の数と完全に一致。タップで表示。
+ * ⑤ 下にスライド or 下ボタンで、活用表 → 主な意味 → 次の助動詞活用表 → 主な意味 ... と順番に遷移。
  */
 
 (function () {
   "use strict";
 
-  // 活用形の定義（表示順とラベル）
-  const CONJUGATION_FORMS = [
-    { key: "mizen", label: "未然形" },
-    { key: "renyou", label: "連用形" },
-    { key: "shuushi", label: "終止形" },
-    { key: "rentai", label: "連体形" },
-    { key: "izen", label: "已然形" },
-    { key: "meirei", label: "命令形" }
+  // 活用表の行定義（8行）
+  const TABLE_ROWS = [
+    { key: "kihon", label: "基本形", isAlwaysVisible: true, isTrigger: true },
+    { key: "mizen", label: "未然形", isAlwaysVisible: false },
+    { key: "renyou", label: "連用形", isAlwaysVisible: false },
+    { key: "shuushi", label: "終止形", isAlwaysVisible: false },
+    { key: "rentai", label: "連体形", isAlwaysVisible: false },
+    { key: "izen", label: "已然形", isAlwaysVisible: false },
+    { key: "meirei", label: "命令形", isAlwaysVisible: false },
+    { key: "type", label: "活用の型", isAlwaysVisible: true }
   ];
 
   // DOM要素のキャッシュ
   const dom = {
     homeView: document.getElementById("home-view"),
-    detailView: document.getElementById("detail-view"),
-    jodoushiList: document.getElementById("jodoushi-list"),
-    searchInput: document.getElementById("search-input"),
-    clearSearchBtn: document.getElementById("clear-search-btn"),
+    groupView: document.getElementById("group-view"),
+    studyView: document.getElementById("study-view"),
+    
+    connectionList: document.getElementById("connection-list"),
+    groupList: document.getElementById("group-list"),
+    groupCategoryTitle: document.getElementById("group-category-title"),
+    
     backToHomeBtn: document.getElementById("back-to-home-btn"),
-    prevItemBtn: document.getElementById("prev-item-btn"),
-    nextItemBtn: document.getElementById("next-item-btn"),
-    headerCard: document.getElementById("jodoushi-header-card"),
-    detailName: document.getElementById("detail-name"),
-    detailMeaning: document.getElementById("detail-meaning"),
-    detailMetaTags: document.getElementById("detail-meta-tags"),
-    conjugationTbody: document.getElementById("conjugation-tbody"),
-    revealAllBtn: document.getElementById("reveal-all-btn"),
-    resetAllBtn: document.getElementById("reset-all-btn")
+    backToGroupsBtn: document.getElementById("back-to-groups-btn"),
+    
+    studyDeckContainer: document.getElementById("study-deck-container"),
+    studyStepBadge: document.getElementById("study-step-badge"),
+    dockPrevBtn: document.getElementById("dock-prev-btn"),
+    dockNextBtn: document.getElementById("dock-next-btn"),
+    dockCenterIndicator: document.getElementById("dock-center-indicator")
   };
 
-  // 内部状態
-  let currentIndex = -1;
-  let filteredData = [];
+  // 状態管理
+  let currentCategory = null;
+  let currentGroup = null;
+  let currentStepIndex = 0; // 0, 1, 2, 3 ... (各助動詞ごとに 活用表(偶数) と 主な意味(奇数))
+  let totalSteps = 0;
 
   /**
-   * 活用なし（〇やなしなど）の判定
-   * @param {string} val 
-   * @returns {boolean}
+   * 画面の切り替え
+   * @param {'home'|'group'|'study'} viewName 
    */
-  function isNoneConjugation(val) {
-    if (!val) return true;
-    const clean = val.trim();
-    return clean === "〇" || clean === "（〇）" || clean === "なし" || clean === "-";
-  }
+  function switchView(viewName) {
+    [dom.homeView, dom.groupView, dom.studyView].forEach((v) => {
+      v.classList.remove("active-view");
+      v.setAttribute("hidden", "true");
+    });
 
-  /**
-   * ホーム画面: 助動詞リストの生成
-   */
-  function renderList(items) {
-    dom.jodoushiList.innerHTML = "";
-
-    if (!items || items.length === 0) {
-      dom.jodoushiList.innerHTML = `
-        <div style="text-align: center; padding: 32px 16px; color: #a0aec0;">
-          <p style="font-size: 1.1rem; margin-bottom: 6px;">該当する助動詞が見つかりません</p>
-          <p style="font-size: 0.85rem;">検索キーワードを変えてお試しください</p>
-        </div>
-      `;
-      return;
+    if (viewName === "home") {
+      dom.homeView.classList.add("active-view");
+      dom.homeView.removeAttribute("hidden");
+    } else if (viewName === "group") {
+      dom.groupView.classList.add("active-view");
+      dom.groupView.removeAttribute("hidden");
+    } else if (viewName === "study") {
+      dom.studyView.classList.add("active-view");
+      dom.studyView.removeAttribute("hidden");
     }
 
-    items.forEach((item) => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // =========================================================================
+  // ① ホーム画面: 接続ごとの一覧リスト表示
+  // =========================================================================
+  function renderConnectionList() {
+    dom.connectionList.innerHTML = "";
+
+    connectionCategories.forEach((cat, idx) => {
       const card = document.createElement("div");
-      card.className = "jodoushi-card";
+      card.className = "category-card";
       card.setAttribute("role", "button");
       card.setAttribute("tabindex", "0");
-      card.setAttribute("aria-label", `${item.name}: ${item.meaning}`);
-
-      const tagsHtml = [];
-      if (item.type) {
-        tagsHtml.push(`<span class="tag type-tag">${item.type}</span>`);
-      }
-      if (item.connection) {
-        tagsHtml.push(`<span class="tag conn-tag">${item.connection}</span>`);
-      }
+      card.setAttribute("aria-label", `${cat.name}`);
 
       card.innerHTML = `
-        <div class="card-left">
-          <div class="card-name-badge">${item.name}</div>
-          <div class="card-info">
-            <div class="card-meaning">${item.meaning}</div>
-            <div class="card-meta">${tagsHtml.join("")}</div>
+        <div class="category-left">
+          <div class="category-number-badge">${idx + 1}</div>
+          <div class="category-name">
+            ${cat.name}
+            <span class="category-badge-count">${cat.groups.length}項目</span>
           </div>
         </div>
-        <div class="card-arrow">&rsaquo;</div>
+        <div class="category-arrow">&rsaquo;</div>
       `;
 
-      // クリック/タップで詳細表示
       card.addEventListener("click", () => {
-        openDetailById(item.id);
+        openGroupView(cat);
       });
 
-      // キーボード操作 (Enter / Space)
       card.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          openDetailById(item.id);
+          openGroupView(cat);
         }
       });
 
-      dom.jodoushiList.appendChild(card);
+      dom.connectionList.appendChild(card);
     });
   }
 
+  // =========================================================================
+  // ② グループ画面: その接続の助動詞リスト（意味・用法は記載しない）
+  // =========================================================================
+  function openGroupView(category) {
+    currentCategory = category;
+    dom.groupCategoryTitle.textContent = category.name;
+    dom.groupList.innerHTML = "";
+
+    category.groups.forEach((group) => {
+      const card = document.createElement("div");
+      card.className = "group-item-card";
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("aria-label", `${group.title}`);
+
+      // 要件②: 「この時、意味・用法は記載しない。」
+      // タイトル（例：「る・らる」「す・さす・しむ・ず」等）のみを大きく表示
+      card.innerHTML = `
+        <div class="group-item-title">${group.title}</div>
+        <div class="group-item-arrow">&rsaquo;</div>
+      `;
+
+      card.addEventListener("click", () => {
+        startStudy(group);
+      });
+
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          startStudy(group);
+        }
+      });
+
+      dom.groupList.appendChild(card);
+    });
+
+    switchView("group");
+  }
+
+  // =========================================================================
+  // ③・④・⑤ 学習画面: 8行×2列表・主な意味・スライド遷移
+  // =========================================================================
+  function startStudy(group) {
+    currentGroup = group;
+    currentStepIndex = 0;
+    // 各助動詞につき [活用表] と [主な意味] の2画面
+    totalSteps = group.items.length * 2;
+    renderCurrentStep();
+    switchView("study");
+  }
+
   /**
-   * 詳細画面: 指定の助動詞を表示
+   * 現在のステップ（活用表 or 主な意味 or 完了画面）をレンダリング
    */
-  function showDetail(index) {
-    if (index < 0 || index >= jodoushiData.length) return;
-    currentIndex = index;
-    const item = jodoushiData[currentIndex];
+  function renderCurrentStep() {
+    dom.studyDeckContainer.innerHTML = "";
 
-    // ヘッダー情報の更新
-    dom.detailName.textContent = item.name;
-    dom.detailMeaning.textContent = item.meaning;
-
-    // タグの更新
-    dom.detailMetaTags.innerHTML = "";
-    if (item.type) {
-      const span = document.createElement("span");
-      span.className = "tag type-tag";
-      span.textContent = item.type;
-      dom.detailMetaTags.appendChild(span);
-    }
-    if (item.connection) {
-      const span = document.createElement("span");
-      span.className = "tag conn-tag";
-      span.textContent = item.connection;
-      dom.detailMetaTags.appendChild(span);
+    // 完了ステップの場合
+    if (currentStepIndex >= totalSteps) {
+      renderCompletionScreen();
+      updateNavigationControls();
+      return;
     }
 
-    // 前へ・次へボタンの有効/無効化
-    dom.prevItemBtn.disabled = currentIndex <= 0;
-    dom.prevItemBtn.style.opacity = currentIndex <= 0 ? "0.4" : "1";
+    const verbIndex = Math.floor(currentStepIndex / 2);
+    const currentVerb = currentGroup.items[verbIndex];
+    const isConjugation = currentStepIndex % 2 === 0;
 
-    dom.nextItemBtn.disabled = currentIndex >= jodoushiData.length - 1;
-    dom.nextItemBtn.style.opacity = currentIndex >= jodoushiData.length - 1 ? "0.4" : "1";
+    // 上部バッジ更新
+    dom.studyStepBadge.textContent = `${currentVerb.name} [${isConjugation ? "活用表" : "主な意味"}] (${currentStepIndex + 1} / ${totalSteps})`;
 
-    // 活用表の動的生成
-    dom.conjugationTbody.innerHTML = "";
+    if (isConjugation) {
+      // ③ 8行×2列 活用表のレンダリング
+      renderConjugationCard(currentVerb);
+    } else {
+      // ④ 主な意味画面のレンダリング
+      renderMeaningsCard(currentVerb);
+    }
 
-    CONJUGATION_FORMS.forEach((form) => {
+    updateNavigationControls();
+  }
+
+  /**
+   * ③ 8行×2列の表を生成
+   * 右列:「基本形」「未然形」「連用形」「終止形」「連体形」「已然形」「命令形」「活用の型」
+   * 左列: 対応する活用。
+   * 1行目「基本形」と8行目「活用の型」は常時表示。
+   * 2〜7行目は最初は空白、タップで表示。
+   * 1行目の基本形タップで全マス一括表示。
+   */
+  function renderConjugationCard(verb) {
+    const card = document.createElement("div");
+    card.className = "study-card";
+
+    // カードヘッダー
+    card.innerHTML = `
+      <div class="card-header-bar">
+        <div class="card-title-group">
+          <span class="card-target-name">${verb.name}</span>
+          <span class="card-mode-badge">活用表（8行）</span>
+        </div>
+        <span class="card-hint-text">基本形タップで全表示</span>
+      </div>
+    `;
+
+    // 8行×2列 テーブルラッパー
+    const tableWrapper = document.createElement("div");
+    tableWrapper.className = "table-wrapper";
+
+    const table = document.createElement("table");
+    table.className = "table-8x2";
+    table.setAttribute("aria-label", `${verb.name}の活用表`);
+
+    const tbody = document.createElement("tbody");
+
+    // 2〜7行の隠しマス一覧を保持（一括表示用）
+    const hiddenCells = [];
+
+    TABLE_ROWS.forEach((rowDef) => {
       const tr = document.createElement("tr");
 
-      // 活用形名
-      const th = document.createElement("th");
-      th.className = "td-form-name";
-      th.scope = "row";
-      th.textContent = form.label;
+      // 左列（回答・値の列）
+      const tdLeft = document.createElement("td");
+      tdLeft.className = "td-answer-col";
 
-      // 答えセル
-      const td = document.createElement("td");
-      td.className = "td-answer-cell";
+      // 右列（ラベル・見出しの列）
+      const thRight = document.createElement("th");
+      thRight.className = "th-label-col";
+      thRight.scope = "row";
+      thRight.textContent = rowDef.label;
 
-      const answerVal = (item.conjugation && item.conjugation[form.key]) ? item.conjugation[form.key] : "〇";
-      const isNone = isNoneConjugation(answerVal);
+      const rawVal = verb.conjugation[rowDef.key] || "〇";
 
-      const box = document.createElement("div");
-      box.className = "answer-box";
-
-      if (isNone) {
-        // 活用がない箇所は最初から「〇」として表示し、タップ不要にする
-        box.classList.add("is-none");
-        box.innerHTML = `
-          <span class="answer-text">${answerVal}</span>
+      if (rowDef.key === "kihon") {
+        // 1行目: 基本形（常に表示。タップすると全マス一括表示されるトリガー）
+        const kihonCell = document.createElement("div");
+        kihonCell.className = "kihon-trigger-cell";
+        kihonCell.setAttribute("role", "button");
+        kihonCell.setAttribute("tabindex", "0");
+        kihonCell.setAttribute("title", "ここをタップすると全マスを一括表示します");
+        kihonCell.innerHTML = `
+          <span class="kihon-char">${rawVal}</span>
+          <span class="kihon-tap-hint">全表示 👆</span>
         `;
+
+        const triggerAll = () => {
+          hiddenCells.forEach((box, i) => {
+            setTimeout(() => {
+              box.classList.remove("is-hidden");
+              box.classList.add("is-revealed");
+            }, i * 35);
+          });
+          // 演出
+          kihonCell.style.transform = "scale(0.95)";
+          setTimeout(() => { kihonCell.style.transform = ""; }, 150);
+        };
+
+        kihonCell.addEventListener("click", triggerAll);
+        kihonCell.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            triggerAll();
+          }
+        });
+
+        tdLeft.appendChild(kihonCell);
+
+      } else if (rowDef.key === "type") {
+        // 8行目: 活用の型（常に表示）
+        const typeCell = document.createElement("div");
+        typeCell.className = "type-static-cell";
+        typeCell.textContent = rawVal;
+        tdLeft.appendChild(typeCell);
+
       } else {
-        // 活用がある箇所は初期状態で隠す
-        box.classList.add("is-hidden");
+        // 2行目〜7行目（未然形〜命令形）: 初期状態は空白、タップで表示
+        const box = document.createElement("div");
+        box.className = "cell-box is-hidden";
         box.setAttribute("role", "button");
         box.setAttribute("tabindex", "0");
-        box.setAttribute("aria-label", `${form.label}の活用を見る`);
+        box.setAttribute("aria-label", `${rowDef.label}を表示`);
 
         box.innerHTML = `
-          <div class="cover-placeholder">
+          <div class="cell-cover-text">
             <span>？</span>
             <span>タップ</span>
           </div>
-          <span class="answer-text">${answerVal}</span>
+          <span class="cell-answer-text">${rawVal}</span>
         `;
 
-        // 個別タップで答えを表示（もう一度タップすると再テスト用に隠す）
-        const toggleAnswer = () => {
+        const toggleCell = () => {
           if (box.classList.contains("is-hidden")) {
             box.classList.remove("is-hidden");
             box.classList.add("is-revealed");
-          } else if (box.classList.contains("is-revealed")) {
+          } else {
             box.classList.remove("is-revealed");
             box.classList.add("is-hidden");
           }
         };
 
-        box.addEventListener("click", toggleAnswer);
+        box.addEventListener("click", toggleCell);
         box.addEventListener("keydown", (e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            toggleAnswer();
+            toggleCell();
           }
         });
+
+        hiddenCells.push(box);
+        tdLeft.appendChild(box);
       }
 
-      td.appendChild(box);
-      tr.appendChild(th);
-      tr.appendChild(td);
-      dom.conjugationTbody.appendChild(tr);
+      // 要件③: 左の列が値、右の列がラベル
+      tr.appendChild(tdLeft);
+      tr.appendChild(thRight);
+      tbody.appendChild(tr);
     });
 
-    // 画面切り替え
-    dom.homeView.classList.remove("active-view");
-    dom.detailView.classList.add("active-view");
-    dom.detailView.removeAttribute("hidden");
-    dom.homeView.setAttribute("hidden", "true");
+    table.appendChild(tbody);
+    tableWrapper.appendChild(table);
+    card.appendChild(tableWrapper);
 
-    // スクロールをトップに戻す
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // クイック操作（すべて表示 / リセット）
+    const quickBar = document.createElement("div");
+    quickBar.className = "table-quick-actions";
+    quickBar.innerHTML = `
+      <button class="quick-btn" id="btn-reveal-table">すべて表示</button>
+      <button class="quick-btn" id="btn-reset-table">もう一度隠す</button>
+    `;
 
-    // URLハッシュの更新（ブラウザの「戻る」ボタン対応）
-    if (history.pushState) {
-      history.pushState({ view: "detail", id: item.id }, "", `#${item.id}`);
-    }
-  }
-
-  /**
-   * IDから助動詞を開く
-   */
-  function openDetailById(id) {
-    const idx = jodoushiData.findIndex((item) => item.id === id);
-    if (idx !== -1) {
-      showDetail(idx);
-    }
-  }
-
-  /**
-   * ホーム画面に戻る
-   */
-  function showHome() {
-    dom.detailView.classList.remove("active-view");
-    dom.homeView.classList.add("active-view");
-    dom.homeView.removeAttribute("hidden");
-    dom.detailView.setAttribute("hidden", "true");
-
-    if (history.pushState) {
-      history.pushState({ view: "home" }, "", window.location.pathname);
-    }
-  }
-
-  /**
-   * 一括表示機能: すべての隠しセルを表示する
-   */
-  function revealAllAnswers() {
-    const boxes = dom.conjugationTbody.querySelectorAll(".answer-box.is-hidden");
-    boxes.forEach((box, i) => {
-      // わずかなディレイをつけて気持ちよく展開
-      setTimeout(() => {
+    quickBar.querySelector("#btn-reveal-table").addEventListener("click", () => {
+      hiddenCells.forEach((box) => {
         box.classList.remove("is-hidden");
         box.classList.add("is-revealed");
-      }, i * 35);
-    });
-
-    // ヘッダーカードをタップした際の軽いフィードバック演出
-    dom.headerCard.style.transform = "scale(0.98)";
-    setTimeout(() => {
-      dom.headerCard.style.transform = "";
-    }, 150);
-  }
-
-  /**
-   * 一括リセット機能: もう一度隠す
-   */
-  function resetAllAnswers() {
-    const boxes = dom.conjugationTbody.querySelectorAll(".answer-box.is-revealed");
-    boxes.forEach((box) => {
-      box.classList.remove("is-revealed");
-      box.classList.add("is-hidden");
-    });
-  }
-
-  /**
-   * 検索フィルター
-   */
-  function handleSearch() {
-    const query = dom.searchInput.value.trim().toLowerCase();
-    dom.clearSearchBtn.hidden = query.length === 0;
-
-    if (!query) {
-      filteredData = [...jodoushiData];
-    } else {
-      filteredData = jodoushiData.filter((item) => {
-        const nameMatch = item.name.toLowerCase().includes(query);
-        const meaningMatch = item.meaning.toLowerCase().includes(query);
-        const typeMatch = item.type ? item.type.toLowerCase().includes(query) : false;
-        const connMatch = item.connection ? item.connection.toLowerCase().includes(query) : false;
-        return nameMatch || meaningMatch || typeMatch || connMatch;
       });
-    }
-    renderList(filteredData);
+    });
+
+    quickBar.querySelector("#btn-reset-table").addEventListener("click", () => {
+      hiddenCells.forEach((box) => {
+        box.classList.remove("is-revealed");
+        box.classList.add("is-hidden");
+      });
+    });
+
+    card.appendChild(quickBar);
+    dom.studyDeckContainer.appendChild(card);
   }
 
   /**
-   * イベントリスナーの登録
+   * ④ 主な意味画面のレンダリング
+   * 空白の数は「主な意味」の数と完全に一致（例: き=1つ、べし=6つ）
    */
-  function setupEventListeners() {
-    // 戻るボタン
-    dom.backToHomeBtn.addEventListener("click", showHome);
+  function renderMeaningsCard(verb) {
+    const card = document.createElement("div");
+    card.className = "study-card";
 
-    // 原形ヘッダーカードのタップで一括表示
-    dom.headerCard.addEventListener("click", revealAllAnswers);
-    dom.headerCard.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        revealAllAnswers();
-      }
+    const meaningCount = verb.meanings.length;
+
+    // カードヘッダー
+    card.innerHTML = `
+      <div class="card-header-bar">
+        <div class="card-title-group">
+          <span class="card-target-name">${verb.name}</span>
+          <span class="card-mode-badge">主な意味（全${meaningCount}つ）</span>
+        </div>
+        <span class="card-hint-text">各マスをタップして確認</span>
+      </div>
+    `;
+
+    // 意味スロット一覧コンテナ
+    const container = document.createElement("div");
+    container.className = "meanings-container";
+
+    const hiddenSlots = [];
+
+    verb.meanings.forEach((meaning, index) => {
+      const slot = document.createElement("div");
+      slot.className = "meaning-slot-box is-hidden";
+      slot.setAttribute("role", "button");
+      slot.setAttribute("tabindex", "0");
+      slot.setAttribute("aria-label", `意味${index + 1}を表示`);
+
+      slot.innerHTML = `
+        <div class="meaning-cover-hint">
+          <span class="meaning-number-tag">意味 ${index + 1}</span>
+          <span class="meaning-tap-prompt">？ タップして答え合わせ</span>
+        </div>
+        <div class="meaning-content">
+          <span class="meaning-name">${meaning.name}</span>
+          ${meaning.note ? `<span class="meaning-detail">（${meaning.note}）</span>` : ""}
+        </div>
+      `;
+
+      const toggleSlot = () => {
+        if (slot.classList.contains("is-hidden")) {
+          slot.classList.remove("is-hidden");
+          slot.classList.add("is-revealed");
+        } else {
+          slot.classList.remove("is-revealed");
+          slot.classList.add("is-hidden");
+        }
+      };
+
+      slot.addEventListener("click", toggleSlot);
+      slot.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggleSlot();
+        }
+      });
+
+      hiddenSlots.push(slot);
+      container.appendChild(slot);
     });
 
-    // 一括操作ボタン
-    dom.revealAllBtn.addEventListener("click", revealAllAnswers);
-    dom.resetAllBtn.addEventListener("click", resetAllAnswers);
+    card.appendChild(container);
 
-    // 前へ・次へナビゲーション
-    dom.prevItemBtn.addEventListener("click", () => {
-      if (currentIndex > 0) {
-        showDetail(currentIndex - 1);
-      }
+    // クイック操作ボタン
+    const quickBar = document.createElement("div");
+    quickBar.className = "table-quick-actions";
+    quickBar.innerHTML = `
+      <button class="quick-btn" id="btn-reveal-meanings">すべての意味を表示</button>
+      <button class="quick-btn" id="btn-reset-meanings">もう一度隠す</button>
+    `;
+
+    quickBar.querySelector("#btn-reveal-meanings").addEventListener("click", () => {
+      hiddenSlots.forEach((slot) => {
+        slot.classList.remove("is-hidden");
+        slot.classList.add("is-revealed");
+      });
     });
 
-    dom.nextItemBtn.addEventListener("click", () => {
-      if (currentIndex < jodoushiData.length - 1) {
-        showDetail(currentIndex + 1);
-      }
+    quickBar.querySelector("#btn-reset-meanings").addEventListener("click", () => {
+      hiddenSlots.forEach((slot) => {
+        slot.classList.remove("is-revealed");
+        slot.classList.add("is-hidden");
+      });
     });
 
-    // 検索入力
-    dom.searchInput.addEventListener("input", handleSearch);
-    dom.clearSearchBtn.addEventListener("click", () => {
-      dom.searchInput.value = "";
-      handleSearch();
-      dom.searchInput.focus();
+    card.appendChild(quickBar);
+    dom.studyDeckContainer.appendChild(card);
+  }
+
+  /**
+   * グループ完了画面のレンダリング
+   */
+  function renderCompletionScreen() {
+    dom.studyStepBadge.textContent = "学習完了！";
+
+    const card = document.createElement("div");
+    card.className = "study-card complete-card";
+
+    card.innerHTML = `
+      <div class="complete-icon">🎉</div>
+      <h3 class="complete-title">「${currentGroup.title}」の暗記完了！</h3>
+      <p class="complete-desc">活用表と主な意味のチェックが終わりました。<br>繰り返し復習して完璧に定着させましょう。</p>
+      <div class="complete-btn-group">
+        <button class="nav-btn" style="width: 100%; justify-content: center; padding: 12px;" id="restart-group-btn">
+          🔄 もう一度最初から復習する
+        </button>
+        <button class="nav-btn" style="width: 100%; justify-content: center; padding: 12px; background-color: var(--color-primary); color: #fff;" id="back-to-group-list-btn">
+          📋 助動詞リストに戻る
+        </button>
+      </div>
+    `;
+
+    card.querySelector("#restart-group-btn").addEventListener("click", () => {
+      currentStepIndex = 0;
+      renderCurrentStep();
     });
 
-    // ブラウザの戻る/進む（ポップステート）対応
-    window.addEventListener("popstate", () => {
-      const hash = window.location.hash.replace("#", "");
-      if (hash) {
-        openDetailById(hash);
+    card.querySelector("#back-to-group-list-btn").addEventListener("click", () => {
+      switchView("group");
+    });
+
+    dom.studyDeckContainer.appendChild(card);
+  }
+
+  /**
+   * ⑤ 下部ドック操作の更新（下ボタン / 上ボタン）
+   */
+  function updateNavigationControls() {
+    // 上ボタン（前へ）
+    dom.dockPrevBtn.disabled = currentStepIndex <= 0;
+
+    // 下ボタン（次へ）
+    if (currentStepIndex >= totalSteps) {
+      dom.dockNextBtn.style.display = "none";
+      dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">全ステップ終了</span>`;
+    } else {
+      dom.dockNextBtn.style.display = "flex";
+      
+      const isConjugation = currentStepIndex % 2 === 0;
+      const verbIndex = Math.floor(currentStepIndex / 2);
+      const currentVerb = currentGroup.items[verbIndex];
+
+      if (isConjugation) {
+        dom.dockNextBtn.querySelector(".dock-text").textContent = "主な意味へ";
+        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">下にスライドで意味へ</span>`;
       } else {
-        dom.detailView.classList.remove("active-view");
-        dom.homeView.classList.add("active-view");
-        dom.homeView.removeAttribute("hidden");
-        dom.detailView.setAttribute("hidden", "true");
+        const nextVerbIndex = verbIndex + 1;
+        if (nextVerbIndex < currentGroup.items.length) {
+          const nextVerb = currentGroup.items[nextVerbIndex];
+          dom.dockNextBtn.querySelector(".dock-text").textContent = `「${nextVerb.name}」へ`;
+          dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">下にスライドで次の助動詞へ</span>`;
+        } else {
+          dom.dockNextBtn.querySelector(".dock-text").textContent = "完了へ";
+          dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">下にスライドで完了</span>`;
+        }
       }
-    });
+    }
   }
 
   /**
-   * 初期化処理
+   * 次のステップへ進む（下へスライド / 下ボタン）
    */
-  function init() {
-    if (typeof jodoushiData === "undefined" || !Array.isArray(jodoushiData)) {
-      console.error("data.js が正しく読み込まれていません。");
-      return;
-    }
-
-    filteredData = [...jodoushiData];
-    renderList(filteredData);
-    setupEventListeners();
-
-    // URLハッシュ付きで開かれた場合の直リンク対応
-    const initialHash = window.location.hash.replace("#", "");
-    if (initialHash) {
-      openDetailById(initialHash);
+  function goToNextStep() {
+    if (currentStepIndex < totalSteps) {
+      currentStepIndex++;
+      renderCurrentStep();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 
-  // DOM構築完了後に実行
+  /**
+   * 前のステップへ戻る（上へスライド / 上ボタン）
+   */
+  function goToPrevStep() {
+    if (currentStepIndex > 0) {
+      currentStepIndex--;
+      renderCurrentStep();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  // =========================================================================
+  // タッチスワイプ（指で下にスライド・上にスライド）の検知
+  // =========================================================================
+  function setupSwipeHandlers() {
+    let touchStartY = 0;
+    let touchStartX = 0;
+    let touchStartTime = 0;
+
+    const container = dom.studyDeckContainer;
+
+    container.addEventListener("touchstart", (e) => {
+      if (e.touches.length === 1) {
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        touchStartTime = Date.now();
+      }
+    }, { passive: true });
+
+    container.addEventListener("touchend", (e) => {
+      if (e.changedTouches.length === 1) {
+        const deltaY = e.changedTouches[0].clientY - touchStartY;
+        const deltaX = e.changedTouches[0].clientX - touchStartX;
+        const duration = Date.now() - touchStartTime;
+
+        // 縦方向のスワイプ判定（横方向の誤動作を防ぐため abs(deltaY) > abs(deltaX) * 1.5）
+        if (Math.abs(deltaY) > 50 && Math.abs(deltaY) > Math.abs(deltaX) * 1.3 && duration < 600) {
+          if (deltaY < -40) {
+            // 指を上にスワイプ（画面を下へスクロールして次へ進む操作）
+            goToNextStep();
+          } else if (deltaY > 40) {
+            // 指を下にスワイプ（前の画面に戻る操作）
+            goToPrevStep();
+          }
+        }
+      }
+    }, { passive: true });
+  }
+
+  // =========================================================================
+  // イベントリスナー登録
+  // =========================================================================
+  function setupEventListeners() {
+    // 画面遷移ボタン
+    dom.backToHomeBtn.addEventListener("click", () => {
+      switchView("home");
+    });
+
+    dom.backToGroupsBtn.addEventListener("click", () => {
+      switchView("group");
+    });
+
+    // 下部ドックボタン
+    dom.dockNextBtn.addEventListener("click", goToNextStep);
+    dom.dockPrevBtn.addEventListener("click", goToPrevStep);
+
+    // スワイプ検知
+    setupSwipeHandlers();
+  }
+
+  // 初期化
+  function init() {
+    renderConnectionList();
+    setupEventListeners();
+  }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {

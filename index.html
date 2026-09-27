@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#1a2d42">
+  <meta name="theme-color" content="#1e3a5f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="robots" content="noindex, nofollow">
-  <title>古文 助動詞マスター | 活用暗記アプリ</title>
+  <title>古文 助動詞マスター | 活用・意味 暗記アプリ</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,113 +15,98 @@
 </head>
 <body>
   <div class="app-container">
+    
     <!-- アプリ共通ヘッダー -->
     <header class="app-header">
       <div class="header-inner">
-        <h1 class="app-title">古文 助動詞マスター</h1>
-        <p class="app-subtitle">スマートフォンでサクサク覚える活用暗記シート</p>
+        <h1 class="app-title" id="app-main-title">古文 助動詞マスター</h1>
+        <p class="app-subtitle">スマートフォンでサクサク覚える活用・意味暗記シート</p>
       </div>
     </header>
 
-    <!-- メインコンテンツ領域 -->
+    <!-- メインコンテンツ -->
     <main class="main-content">
-      
-      <!-- 画面1: ホーム一覧画面 -->
-      <section id="home-view" class="view active-view" aria-label="助動詞一覧">
+
+      <!-- =================================================================
+           画面①: ホーム画面（接続ごとの一覧リスト）
+           ================================================================= -->
+      <section id="home-view" class="view active-view" aria-label="接続一覧">
         <div class="view-intro">
-          <div class="intro-badge">学習モード</div>
-          <p class="intro-text">学習したい助動詞をタップして、活用をテストしましょう。</p>
+          <div class="intro-badge">接続から選ぶ</div>
+          <p class="intro-text">学習したい「接続」をタップして助動詞を選びましょう。</p>
         </div>
 
-        <!-- 簡易検索・絞り込み入力欄 -->
-        <div class="search-box-wrapper">
-          <input type="text" id="search-input" class="search-input" placeholder="助動詞名や意味で検索 (例: 過去, る)..." autocomplete="off">
-          <button id="clear-search-btn" class="clear-search-btn" aria-label="検索クリア" hidden>&times;</button>
-        </div>
-
-        <!-- 助動詞リスト表示領域 -->
-        <div id="jodoushi-list" class="jodoushi-list" role="list">
-          <!-- data.js から動的に生成 -->
+        <div id="connection-list" class="category-list" role="list">
+          <!-- data.js から動的に生成 (未然形接続, 連用形接続, 終止形接続, 体言・連体形・一部助詞接続, その他接続) -->
         </div>
       </section>
 
-      <!-- 画面2: 活用表詳細画面 -->
-      <section id="detail-view" class="view" aria-label="活用表詳細" hidden>
-        <!-- 戻るナビゲーション -->
-        <nav class="detail-nav">
-          <button id="back-to-home-btn" class="back-btn" aria-label="一覧に戻る">
-            <span class="icon">&larr;</span> 一覧に戻る
+      <!-- =================================================================
+           画面②: 助動詞グループリスト画面（意味・用法は記載しない）
+           ================================================================= -->
+      <section id="group-view" class="view" aria-label="助動詞リスト" hidden>
+        <nav class="sub-nav">
+          <button id="back-to-home-btn" class="nav-btn" aria-label="接続一覧に戻る">
+            <span class="icon">&larr;</span> 接続一覧
           </button>
-          <div class="nav-actions">
-            <button id="prev-item-btn" class="nav-step-btn" title="前の助動詞">&lt; 前へ</button>
-            <button id="next-item-btn" class="nav-step-btn" title="次の助動詞">次へ &gt;</button>
+        </nav>
+
+        <div class="view-intro">
+          <h2 id="group-category-title" class="section-title">未然形接続</h2>
+          <p class="intro-text">学習する項目をタップしてください。</p>
+        </div>
+
+        <div id="group-list" class="group-items-list" role="list">
+          <!-- data.js から動的に生成 (例:「る・らる」「す・さす・しむ・ず」など) -->
+        </div>
+      </section>
+
+      <!-- =================================================================
+           画面③・④・⑤: 学習画面（8行×2列 活用表 / 主な意味 / 前後スライド）
+           ================================================================= -->
+      <section id="study-view" class="view" aria-label="暗記学習" hidden>
+        <!-- 上部ナビゲーションバー -->
+        <nav class="study-top-nav">
+          <button id="back-to-groups-btn" class="nav-btn" aria-label="助動詞リストに戻る">
+            <span class="icon">&larr;</span> リスト
+          </button>
+          <div class="study-step-badge" id="study-step-badge">
+            1 / 4
           </div>
         </nav>
 
-        <!-- 助動詞ヘッダーカード (タップで一括表示) -->
-        <div id="jodoushi-header-card" class="jodoushi-header-card" role="button" tabindex="0" title="ここをタップすると全マスを一括表示します">
-          <div class="card-hint-badge">
-            <span class="sparkle-icon">💡</span>
-            <span>ここをタップで全答え表示</span>
-          </div>
+        <!-- 学習カード表示エリア（スワイプ/スライド対応） -->
+        <div id="study-deck-container" class="study-deck-container">
+          <!-- app.js から現在のステップ（活用表または主な意味）を動的レンダリング -->
+        </div>
+
+        <!-- 画面下部: スライド操作コントロールバー（下ボタン / 上ボタン） -->
+        <footer class="study-bottom-dock">
+          <button id="dock-prev-btn" class="dock-nav-btn prev-btn" aria-label="前の画面へ">
+            <span class="dock-arrow">&uarr;</span>
+            <span class="dock-text">前へ</span>
+          </button>
           
-          <div class="header-main-info">
-            <div class="name-container">
-              <span class="name-label">原形</span>
-              <h2 id="detail-name" class="detail-name">る</h2>
-            </div>
-            <div class="meta-tags" id="detail-meta-tags">
-              <span id="detail-type" class="tag type-tag">下二段型</span>
-              <span id="detail-connection" class="tag conn-tag">未然形接続</span>
-            </div>
+          <div class="dock-center-indicator" id="dock-center-indicator">
+            <span class="indicator-label">下にスライドで次へ</span>
           </div>
 
-          <div class="meaning-box">
-            <span class="meaning-label">意味</span>
-            <p id="detail-meaning" class="detail-meaning">受身・尊敬・自発・可能</p>
-          </div>
-        </div>
-
-        <!-- 操作ガイドメッセージ -->
-        <div class="study-tips">
-          <span>各マスをタップで答えを表示 / 原形タップで全表示</span>
-        </div>
-
-        <!-- 活用表 (6行) -->
-        <div class="conjugation-table-container">
-          <table class="conjugation-table" aria-label="活用表">
-            <thead>
-              <tr>
-                <th scope="col" class="th-form">活用形</th>
-                <th scope="col" class="th-answer">活用</th>
-              </tr>
-            </thead>
-            <tbody id="conjugation-tbody">
-              <!-- data.js から動的に生成 -->
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 一括操作コントロールバー -->
-        <div class="action-bar">
-          <button id="reveal-all-btn" class="btn btn-primary">
-            <span>✨ すべての答えを表示</span>
+          <button id="dock-next-btn" class="dock-nav-btn next-btn" aria-label="次の画面へ">
+            <span class="dock-text">次へ</span>
+            <span class="dock-arrow">&darr;</span>
           </button>
-          <button id="reset-all-btn" class="btn btn-secondary">
-            <span>🔄 もう一度隠す（復習）</span>
-          </button>
-        </div>
+        </footer>
       </section>
 
     </main>
 
-    <!-- フッター -->
+    <!-- アプリ共通フッター -->
     <footer class="app-footer">
       <p>高校古文 助動詞暗記ツール &copy; Rihito</p>
     </footer>
   </div>
 
-  <!-- スクリプト読み込み: data.js (データ定義) → app.js (ロジック) -->
+  <!-- スクリプト読み込み -->
   <script src="data.js"></script>
   <script src="app.js"></script>
 </body>

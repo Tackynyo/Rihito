@@ -1,6 +1,6 @@
 /* ==========================================================================
    古文 助動詞マスター スタイルシート (style.css)
-   モバイルファースト設計 / クリーン＆アカデミックなUI
+   モバイルファースト設計 / 接続別・8行×2列表・意味暗記スライド
    ========================================================================== */
 
 /* デザイントークン / CSS変数 */
@@ -10,9 +10,9 @@
   --color-primary-soft: #ebf4ff;  /* 藍色（背景用淡色） */
   
   --color-accent: #c53030;        /* 茜色（アクセント・解答表示用） */
-  --color-accent-soft: #fff5f5;   /* 茜色（背景用） */
+  --color-accent-soft: #fff5f5;   /* 茜色（解答背景用） */
   
-  --color-bg-app: #f7f9fa;        /* アプリ全体背景 */
+  --color-bg-app: #f4f6f9;        /* アプリ全体背景 */
   --color-bg-card: #ffffff;       /* カード背景 */
   --color-bg-cover: #edf2f7;      /* マスカバー背景 */
   
@@ -23,15 +23,15 @@
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 18px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
 
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 18px;
+  --radius-lg: 16px;
   --radius-full: 9999px;
 
-  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* リセット＆ベーススタイル */
@@ -69,7 +69,7 @@ body {
 .app-header {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   color: #ffffff;
-  padding: 20px 16px;
+  padding: 16px 16px 14px 16px;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -82,14 +82,14 @@ body {
 
 .app-title {
   font-family: "Shippori Mincho", serif;
-  font-size: 1.35rem;
+  font-size: 1.3rem;
   letter-spacing: 0.06em;
   font-weight: 800;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .app-subtitle {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   opacity: 0.88;
   letter-spacing: 0.02em;
 }
@@ -100,28 +100,28 @@ body {
   padding: 16px;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 /* 画面共通 (View) */
 .view {
   display: none;
-  animation: fadeIn 0.25s ease-out;
+  animation: fadeIn 0.22s ease-out;
 }
 
 .view.active-view {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ==========================================================================
-   1. ホーム画面（一覧表示）
-   ========================================================================== */
 .view-intro {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .intro-badge {
@@ -140,512 +140,642 @@ body {
   color: var(--color-text-muted);
 }
 
-/* 検索ボックス */
-.search-box-wrapper {
-  position: relative;
-  margin-bottom: 16px;
+.section-title {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin-bottom: 4px;
 }
 
-.search-input {
-  width: 100%;
-  padding: 12px 38px 12px 14px;
-  font-size: 0.92rem;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background-color: #fcfdfd;
-  color: var(--color-text-main);
-  outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.search-input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+/* ナビゲーション共通ボタン */
+.nav-btn {
   background-color: #ffffff;
-}
-
-.clear-search-btn {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  color: var(--color-text-muted);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-primary);
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
-  padding: 4px 8px;
-  line-height: 1;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
 }
 
-/* 助動詞一覧リスト */
-.jodoushi-list {
+.nav-btn:active {
+  background-color: var(--color-primary-soft);
+  transform: scale(0.96);
+}
+
+.sub-nav {
+  margin-bottom: 12px;
+}
+
+/* ==========================================================================
+   画面①: ホーム画面（接続一覧リスト）
+   ========================================================================== */
+.category-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* 各助動詞カード（リストアイテム） */
-.jodoushi-card {
+.category-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--color-bg-card);
+  background-color: #ffffff;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 14px 16px;
+  padding: 16px 18px;
   cursor: pointer;
-  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
   box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
   user-select: none;
 }
 
-.jodoushi-card:hover {
+.category-card:hover {
   border-color: var(--color-primary-light);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
-.jodoushi-card:active {
+.category-card:active {
   transform: scale(0.98);
   background-color: #f8fafc;
 }
 
-.card-left {
+.category-left {
   display: flex;
   align-items: center;
   gap: 14px;
-  flex: 1;
-  min-width: 0;
 }
 
-.card-name-badge {
-  width: 48px;
-  height: 48px;
+.category-number-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   background-color: var(--color-primary-soft);
   color: var(--color-primary);
-  font-family: "Shippori Mincho", serif;
-  font-size: 1.45rem;
   font-weight: 800;
+  font-size: 0.95rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
   flex-shrink: 0;
-  border: 1px solid rgba(30, 58, 95, 0.15);
 }
 
-.card-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+.category-name {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: 0.03em;
 }
 
-.card-meaning {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.tag {
-  font-size: 0.72rem;
-  font-weight: 500;
-  padding: 2px 7px;
-  border-radius: 4px;
-}
-
-.type-tag {
-  background-color: #edf2f7;
-  color: #4a5568;
-}
-
-.conn-tag {
-  background-color: #e6fffa;
-  color: #234e52;
-}
-
-.card-arrow {
+.category-badge-count {
+  font-size: 0.75rem;
   color: var(--color-text-muted);
-  font-size: 1.1rem;
-  padding-left: 8px;
+  background-color: #edf2f7;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  margin-left: 8px;
+  font-family: "Zen Kaku Gothic New", sans-serif;
+  font-weight: 600;
+}
+
+.category-arrow {
+  color: #a0aec0;
+  font-size: 1.3rem;
+  font-weight: 700;
 }
 
 /* ==========================================================================
-   2. 詳細画面（活用表表示）
+   画面②: 助動詞グループリスト画面（意味・用法は記載しない）
    ========================================================================== */
-.detail-nav {
+.group-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group-item-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.back-btn {
   background-color: #ffffff;
-  border: 1.5px solid var(--color-border);
-  color: var(--color-primary);
-  font-size: 0.88rem;
-  font-weight: 700;
-  padding: 8px 14px;
-  border-radius: var(--radius-full);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
+  user-select: none;
 }
 
-.back-btn:active {
-  background-color: var(--color-primary-soft);
-  transform: scale(0.96);
-}
-
-.nav-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.nav-step-btn {
-  background: #ffffff;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.nav-step-btn:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary-light);
-}
-
-/* 助動詞ヘッダーカード（タップで全表示） */
-.jodoushi-header-card {
-  background: linear-gradient(145deg, #ffffff 0%, #f7faff 100%);
-  border: 2px solid var(--color-primary);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow-md);
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
-}
-
-.jodoushi-header-card:hover {
+.group-item-card:hover {
+  border-color: var(--color-primary);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
 }
 
-.jodoushi-header-card:active {
-  transform: scale(0.99);
+.group-item-card:active {
+  transform: scale(0.98);
+  background-color: var(--color-primary-soft);
 }
 
-.card-hint-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background-color: var(--color-primary);
-  color: #ffffff;
-  font-size: 0.72rem;
+.group-item-title {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: 0.08em;
+}
+
+.group-item-arrow {
+  color: var(--color-primary);
+  font-size: 1.4rem;
   font-weight: 700;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  margin-bottom: 10px;
-  box-shadow: 0 2px 4px rgba(30, 58, 95, 0.25);
-  animation: pulseHint 2.5s infinite;
 }
 
-@keyframes pulseHint {
-  0%, 100% { transform: scale(1); opacity: 0.95; }
-  50% { transform: scale(1.03); opacity: 1; }
-}
-
-.header-main-info {
+/* ==========================================================================
+   画面③・④・⑤: 学習画面（8行×2列 活用表 / 主な意味 / スライド）
+   ========================================================================== */
+.study-top-nav {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.study-step-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(30, 58, 95, 0.15);
+}
+
+/* 学習カード表示領域 */
+.study-deck-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 74px; /* 下部ドック用の余白 */
+  touch-action: pan-y;
+  position: relative;
+  min-height: 480px;
+}
+
+.study-card {
+  background-color: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  animation: slideInCard 0.28s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+@keyframes slideInCard {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* カード共通ヘッダー */
+.card-header-bar {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
-  border-bottom: 1px dashed var(--color-border);
   padding-bottom: 8px;
+  border-bottom: 1px dashed var(--color-border);
 }
 
-.name-container {
+.card-title-group {
   display: flex;
   align-items: baseline;
   gap: 8px;
 }
 
-.name-label {
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  font-weight: 700;
-}
-
-.detail-name {
+.card-target-name {
   font-family: "Shippori Mincho", serif;
-  font-size: 2.2rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: var(--color-primary);
-  line-height: 1;
 }
 
-.meaning-box {
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  border: 1px solid rgba(226, 232, 240, 0.8);
+.card-mode-badge {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
-.meaning-label {
-  display: block;
+.card-hint-text {
   font-size: 0.72rem;
-  font-weight: 700;
   color: var(--color-text-muted);
-  margin-bottom: 2px;
 }
 
-.detail-meaning {
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--color-text-main);
-  line-height: 1.4;
-}
-
-/* 操作ガイドテキスト */
-.study-tips {
-  font-size: 0.76rem;
-  text-align: center;
-  color: var(--color-text-muted);
-  margin-bottom: 10px;
-  background-color: #f1f5f9;
-  padding: 6px;
-  border-radius: var(--radius-sm);
-}
-
-/* 活用表スタイル */
-.conjugation-table-container {
-  background-color: #ffffff;
-  border: 1.5px solid var(--color-border);
+/* ==========================================================================
+   ③ 8行×2列 活用表のスタイル
+   右列: 形の名称（基本形〜活用の型）
+   左列: 実際の活用（1行目「基本形」と8行目「活用の型」は常時表示、2〜7行目はタップで表示）
+   ========================================================================== */
+.table-wrapper {
+  border: 2px solid var(--color-primary);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  margin-bottom: 16px;
+  background-color: #ffffff;
+  margin-bottom: 12px;
 }
 
-.conjugation-table {
+.table-8x2 {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
-.conjugation-table thead {
-  background-color: var(--color-primary-soft);
-  border-bottom: 2px solid var(--color-primary);
-}
-
-.conjugation-table th {
-  padding: 10px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  text-align: center;
-}
-
-.th-form {
-  width: 35%;
-  border-right: 1px solid var(--color-border);
-}
-
-.th-answer {
-  width: 65%;
-}
-
-.conjugation-table tbody tr {
+.table-8x2 tr {
   border-bottom: 1px solid var(--color-border);
 }
 
-.conjugation-table tbody tr:last-child {
+.table-8x2 tr:last-child {
   border-bottom: none;
 }
 
-/* 活用形名セル（未然形、連用形...） */
-.td-form-name {
+/* 左の列（回答・値の列）: 62% */
+.td-answer-col {
+  width: 62%;
+  padding: 6px 8px;
+  vertical-align: middle;
   text-align: center;
+  border-right: 2px solid var(--color-border);
+}
+
+/* 右の列（見出し・ラベルの列）: 38% */
+.th-label-col {
+  width: 38%;
+  padding: 8px 6px;
+  vertical-align: middle;
+  text-align: center;
+  background-color: #f7fafc;
+  font-size: 0.88rem;
   font-weight: 700;
-  font-size: 0.92rem;
   color: #4a5568;
-  background-color: #fafbfc;
-  border-right: 1px solid var(--color-border);
-  padding: 10px 8px;
-  vertical-align: middle;
 }
 
-/* 答えセル */
-.td-answer-cell {
-  padding: 8px 10px;
-  vertical-align: middle;
+/* 1行目（基本形）のスタイル: 常に表示＆タップで全表示 */
+.kihon-trigger-cell {
+  background-color: #f8fbff;
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(30, 58, 95, 0.2);
+  transition: all var(--transition-fast);
 }
 
-/* タップ可能な回答マス（カード） */
-.answer-box {
-  min-height: 48px;
+.kihon-trigger-cell:hover {
+  background-color: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
+.kihon-trigger-cell:active {
+  transform: scale(0.97);
+}
+
+.kihon-char {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1.1;
+}
+
+.kihon-tap-hint {
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: var(--color-primary);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  margin-top: 2px;
+}
+
+/* 8行目（活用の型）のスタイル: 常に表示 */
+.type-static-cell {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  padding: 6px;
+  background-color: #f7fafc;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 2〜7行目のマス（初期は空白、タップで表示） */
+.cell-box {
+  min-height: 42px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   user-select: none;
-  position: relative;
-  overflow: hidden;
-  transition: all var(--transition-normal);
+  transition: all var(--transition-fast);
 }
 
-/* 隠れている状態 (Hidden) */
-.answer-box.is-hidden {
+/* 隠れている状態 */
+.cell-box.is-hidden {
   background-color: var(--color-bg-cover);
   border: 1.5px dashed var(--color-border-dark);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
-.answer-box.is-hidden:hover {
+.cell-box.is-hidden:hover {
   background-color: #e2e8f0;
-  border-color: #a0aec0;
 }
 
-.answer-box.is-hidden:active {
+.cell-box.is-hidden:active {
   transform: scale(0.97);
 }
 
-.answer-box.is-hidden .answer-text {
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(6px) scale(0.9);
+.cell-box.is-hidden .cell-answer-text {
+  display: none;
 }
 
-.answer-box.is-hidden .cover-placeholder {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.8rem;
+.cell-box.is-hidden .cell-cover-text {
+  font-size: 0.74rem;
   font-weight: 700;
   color: #a0aec0;
-  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
-/* 表示された状態 (Revealed) - ふわっとアニメーション */
-.answer-box.is-revealed {
+/* 表示された状態（ふわっとアニメーション） */
+.cell-box.is-revealed {
   background-color: var(--color-accent-soft);
-  border: 1.5px solid rgba(197, 48, 48, 0.35);
-  box-shadow: var(--shadow-sm);
-  animation: revealPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  border: 1.5px solid rgba(197, 48, 48, 0.4);
+  animation: revealPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes revealPop {
-  0% {
-    transform: scale(0.94);
-    opacity: 0.7;
-    background-color: #ffe3e3;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-    background-color: var(--color-accent-soft);
-  }
+  0% { transform: scale(0.92); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-.answer-box.is-revealed .cover-placeholder {
+.cell-box.is-revealed .cell-cover-text {
   display: none;
 }
 
-.answer-box.is-revealed .answer-text {
-  opacity: 1;
-  visibility: visible;
-  font-family: "Shippori Mincho", serif;
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--color-accent);
-  letter-spacing: 0.08em;
-  transform: translateY(0) scale(1);
-  transition: all var(--transition-normal);
-}
-
-/* 活用なし（「〇」など）の特別スタイル */
-.answer-box.is-none {
-  background-color: #f8fafc;
-  border: 1px solid var(--color-border);
-  cursor: default;
-}
-
-.answer-box.is-none .cover-placeholder {
-  display: none;
-}
-
-.answer-box.is-none .answer-text {
-  opacity: 1;
-  visibility: visible;
+.cell-box.is-revealed .cell-answer-text {
   font-family: "Shippori Mincho", serif;
   font-size: 1.25rem;
-  font-weight: 700;
-  color: #a0aec0;
+  font-weight: 800;
+  color: var(--color-accent);
+  letter-spacing: 0.04em;
 }
 
-/* 一括操作バー */
-.action-bar {
+/* 表の下のクイック操作ボタン */
+.table-quick-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.quick-btn {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: #f8fafc;
+  color: var(--color-text-main);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.quick-btn:active {
+  background-color: #edf2f7;
+  transform: scale(0.97);
+}
+
+/* ==========================================================================
+   ④ 主な意味 画面のスタイル
+   空白の数は「主な意味」の数と完全に一致
+   ========================================================================== */
+.meanings-container {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-bottom: 12px;
 }
 
-.btn {
-  width: 100%;
-  padding: 13px;
-  font-size: 0.95rem;
-  font-weight: 700;
+.meaning-slot-box {
+  min-height: 54px;
   border-radius: var(--radius-md);
-  border: none;
-  cursor: pointer;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
   transition: all var(--transition-fast);
   box-shadow: var(--shadow-sm);
 }
 
-.btn:active {
+/* 隠れている状態 */
+.meaning-slot-box.is-hidden {
+  background-color: var(--color-bg-cover);
+  border: 1.5px dashed var(--color-border-dark);
+}
+
+.meaning-slot-box.is-hidden:hover {
+  background-color: #e2e8f0;
+}
+
+.meaning-slot-box.is-hidden:active {
   transform: scale(0.98);
 }
 
-.btn-primary {
-  background-color: var(--color-primary);
-  color: #ffffff;
+.meaning-slot-box.is-hidden .meaning-content {
+  display: none;
 }
 
-.btn-primary:hover {
-  background-color: var(--color-primary-light);
-  box-shadow: var(--shadow-md);
+.meaning-slot-box.is-hidden .meaning-cover-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
-.btn-secondary {
+.meaning-number-tag {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background-color: #ffffff;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.meaning-tap-prompt {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #a0aec0;
+}
+
+/* 表示された状態（ふわっとアニメーション） */
+.meaning-slot-box.is-revealed {
+  background-color: var(--color-accent-soft);
+  border: 1.5px solid rgba(197, 48, 48, 0.35);
+  animation: revealPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.meaning-slot-box.is-revealed .meaning-cover-hint {
+  display: none;
+}
+
+.meaning-slot-box.is-revealed .meaning-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.meaning-name {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-accent);
+}
+
+.meaning-detail {
+  font-size: 0.82rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+/* グループ完了画面 */
+.complete-card {
+  text-align: center;
+  padding: 30px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.complete-icon {
+  font-size: 3rem;
+  margin-bottom: 4px;
+}
+
+.complete-title {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.complete-desc {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.complete-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 280px;
+  margin-top: 10px;
+}
+
+/* ==========================================================================
+   ⑤ 画面下部 ドック型スライドコントローラー（下ボタン / 上ボタン）
+   ========================================================================== */
+.study-bottom-dock {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-top: 1.5px solid var(--color-border);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+  z-index: 90;
+}
+
+.dock-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.dock-nav-btn:active {
+  transform: scale(0.96);
+}
+
+.dock-nav-btn.prev-btn {
   background-color: #edf2f7;
   color: #4a5568;
 }
 
-.btn-secondary:hover {
-  background-color: #e2e8f0;
+.dock-nav-btn.prev-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.dock-nav-btn.next-btn {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(30, 58, 95, 0.3);
+}
+
+.dock-nav-btn.next-btn:active {
+  background-color: var(--color-primary-light);
+}
+
+.dock-center-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.indicator-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #a0aec0;
 }
 
 /* フッター */
@@ -658,16 +788,16 @@ body {
   margin-top: auto;
 }
 
-/* PC等大画面時の補助スタイル */
+/* PC等大画面時の表示調整 */
 @media (min-width: 640px) {
   body {
-    padding: 30px 0;
-    background-color: #edf2f7;
+    padding: 24px 0;
+    background-color: #e2e8f0;
   }
 
   .app-container {
     border-radius: var(--radius-lg);
     overflow: hidden;
-    min-height: calc(100vh - 60px);
+    min-height: calc(100vh - 48px);
   }
 }
