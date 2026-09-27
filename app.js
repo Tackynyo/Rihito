@@ -6,8 +6,10 @@
  * ② グループ画面: 接続ごとの助動詞リスト（意味・用法は記載しない）
  * ③ 活用表: 8行×2列（右列: ラベル、左列: 回答。1行目「基本形」と8行目「活用の型」は常時表示、2〜7行目はタップで表示。1行目タップで全表示。上部見出しは削除して上詰め表示）
  * ④ 主な意味: 空白の数は意味の数と完全に一致。タップで表示。
- * ⑤ 左にスライド（スワイプ） or 次へボタンで、本のページをめくるような3Dアニメーションで遷移。
- * ⑥ 画面上部のヘッダー（ネイビー部分含む）をタップするといつでもホーム画面に戻る。
+ * ⑤ 活用表を最初に連続で表示 → その後に「主な意味」を表示。
+ *    意味が完全に一致する助動詞（例:「る」と「らる」、「す」と「さす」と「しむ」）は同一画面にまとめて表示。
+ * ⑥ 左にスライド（スワイプ） or 次へボタンで、本のページをめくるような3Dアニメーションで遷移。
+ * ⑦ 画面上部のヘッダー（ネイビー部分含む）をタップするといつでもホーム画面に戻る。
  */
 
 (function () {
@@ -49,9 +51,59 @@
   // 状態管理
   let currentCategory = null;
   let currentGroup = null;
-  let currentStepIndex = 0; // 0, 1, 2, 3 ... (各助動詞ごとに 活用表(偶数) と 主な意味(奇数))
+  let groupSteps = []; // グループ内の全ステップ（活用表群 → 主な意味群）
+  let currentStepIndex = 0;
   let totalSteps = 0;
   let isAnimating = false;
+
+  /**
+   * グループ内の学習ステップを構築する
+   * ルール:
+   * 1. まず全ての助動詞の活用表を連続で追加
+   * 2. 次に「主な意味」を追加（意味が全く同じ連続する助動詞はまとめて1画面にする）
+   */
+  function buildGroupSteps(group) {
+    const steps = [];
+
+    // 1. 全ての助動詞の「活用表」ステップを連続で登録
+    group.items.forEach((item) => {
+      steps.push({
+        type: "conjugation",
+        title: item.name,
+        verb: item
+      });
+    });
+
+    // 2. 「主な意味」ステップを登録（意味が完全に同じものは統合）
+    const meaningGroups = [];
+    group.items.forEach((item) => {
+      // 意味の名称リストを比較キーとする
+      const meaningKey = item.meanings.map(m => m.name).join("||");
+      const lastGroup = meaningGroups[meaningGroups.length - 1];
+
+      if (lastGroup && lastGroup.key === meaningKey) {
+        lastGroup.verbs.push(item);
+      } else {
+        meaningGroups.push({
+          key: meaningKey,
+          verbs: [item],
+          meanings: item.meanings
+        });
+      }
+    });
+
+    meaningGroups.forEach((mg) => {
+      const combinedTitle = mg.verbs.map(v => v.name).join("・");
+      steps.push({
+        type: "meaning",
+        title: combinedTitle,
+        verbs: mg.verbs,
+        meanings: mg.meanings
+      });
+    });
+
+    return steps;
+  }
 
   /**
    * 画面の切り替え
@@ -156,12 +208,13 @@
   }
 
   // =========================================================================
-  // ③・④・⑤ 学習画面: 8行×2列表・主な意味・本のページめくりアニメーション
+  // ③・④・⑤ 学習画面: 活用表全件 → 主な意味（共通統合）の順で表示
   // =========================================================================
   function startStudy(group) {
     currentGroup = group;
+    groupSteps = buildGroupSteps(group);
     currentStepIndex = 0;
-    totalSteps = group.items.length * 2;
+    totalSteps = groupSteps.length;
     isAnimating = false;
     dom.studyDeckContainer.innerHTML = "";
     renderCurrentStep(null);
@@ -190,9 +243,7 @@
     isAnimating = true;
 
     if (direction === "forward") {
-      // =====================================================================
       // 次へ進む: 現在のページが左へめくれ、下から新しいページが現れる
-      // =====================================================================
       currentCard.classList.add("page-turning-forward");
       newCard.classList.add("page-revealing-forward");
 
@@ -212,9 +263,7 @@
       setTimeout(finishForward, 480);
 
     } else if (direction === "backward") {
-      // =====================================================================
       // 前へ戻る: 前のページが左からめくられて戻り、現在のページを覆う
-      // =====================================================================
       currentCard.classList.add("page-hiding-backward");
       newCard.classList.add("page-revealing-backward");
 
@@ -243,22 +292,19 @@
       return createCompletionCard();
     }
 
-    const verbIndex = Math.floor(stepIndex / 2);
-    const currentVerb = currentGroup.items[verbIndex];
-    const isConjugation = stepIndex % 2 === 0;
+    const step = groupSteps[stepIndex];
 
-    if (isConjugation) {
+    if (step.type === "conjugation") {
       // ③ 8行×2列 活用表カード（上詰め・ヘッダー削除）
-      return createConjugationCard(currentVerb);
+      return createConjugationCard(step.verb);
     } else {
-      // ④ 主な意味カード（空白数は意味数と完全一致）
-      return createMeaningsCard(currentVerb);
+      // ④ 主な意味カード（同じ意味の助動詞はまとめて表示）
+      return createMeaningsCard(step);
     }
   }
 
   /**
    * ③ 8行×2列 活用表カードの生成
-   * 要件修正: 上部の助動詞や「活用表(8行)」表示は削除し、表を上に詰めて表示。
    * 1行目「基本形」と8行目「活用の型」は常時表示。
    * 2〜7行目は最初は空白、タップで表示。
    * 1行目の基本形タップで全マス一括表示。
@@ -408,19 +454,20 @@
 
   /**
    * ④ 主な意味カードの生成
-   * 空白の数は「主な意味」の数と完全に一致（例: き=1つ、べし=6つ）
+   * 助動詞がまとめられている場合は「る・らる」のように連名で表示
+   * 空白の数は「主な意味」の数と完全に一致
    */
-  function createMeaningsCard(verb) {
+  function createMeaningsCard(step) {
     const card = document.createElement("div");
     card.className = "study-card meanings-study-card";
 
-    const meaningCount = verb.meanings.length;
+    const meaningCount = step.meanings.length;
 
-    // カードヘッダー（どの助動詞の意味かを表示）
+    // カードヘッダー（対象助動詞の名称を表示: 例「る・らる」「す・さす・しむ」）
     card.innerHTML = `
       <div class="card-header-bar">
         <div class="card-title-group">
-          <span class="card-target-name">${verb.name}</span>
+          <span class="card-target-name">${step.title}</span>
           <span class="card-mode-badge">主な意味（全${meaningCount}つ）</span>
         </div>
         <span class="card-hint-text">各マスをタップして確認</span>
@@ -432,7 +479,7 @@
     container.className = "meanings-container";
     const hiddenSlots = [];
 
-    verb.meanings.forEach((meaning, index) => {
+    step.meanings.forEach((meaning, index) => {
       const slot = document.createElement("div");
       slot.className = "meaning-slot-box is-hidden";
       slot.setAttribute("role", "button");
@@ -546,31 +593,27 @@
       return;
     }
 
-    const verbIndex = Math.floor(currentStepIndex / 2);
-    const currentVerb = currentGroup.items[verbIndex];
-    const isConjugation = currentStepIndex % 2 === 0;
+    const currentStep = groupSteps[currentStepIndex];
+    const typeLabel = currentStep.type === "conjugation" ? "活用表" : "主な意味";
 
-    // 上部バッジ更新
-    dom.studyStepBadge.textContent = `${currentVerb.name} [${isConjugation ? "活用表" : "主な意味"}] (${currentStepIndex + 1} / ${totalSteps})`;
+    // 上部バッジ更新（例: 「る [活用表] (1 / 3)」や「る・らる [主な意味] (3 / 3)」）
+    dom.studyStepBadge.textContent = `${currentStep.title} [${typeLabel}] (${currentStepIndex + 1} / ${totalSteps})`;
 
     // 左ボタン（前へ）
     dom.dockPrevBtn.disabled = currentStepIndex <= 0;
 
     // 右ボタン（次へ）
     dom.dockNextBtn.style.display = "flex";
-    if (isConjugation) {
-      dom.dockNextBtn.querySelector(".dock-text").textContent = "主な意味へ";
-      dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">左にスライドで意味へ</span>`;
+    if (currentStepIndex < totalSteps - 1) {
+      const nextStep = groupSteps[currentStepIndex + 1];
+      const nextLabel = nextStep.type === "conjugation" 
+        ? `「${nextStep.title}」表へ` 
+        : `「${nextStep.title}」意味へ`;
+      dom.dockNextBtn.querySelector(".dock-text").textContent = nextLabel;
+      dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">左にスライドで次へ</span>`;
     } else {
-      const nextVerbIndex = verbIndex + 1;
-      if (nextVerbIndex < currentGroup.items.length) {
-        const nextVerb = currentGroup.items[nextVerbIndex];
-        dom.dockNextBtn.querySelector(".dock-text").textContent = `「${nextVerb.name}」へ`;
-        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">左にスライドで次の助動詞へ</span>`;
-      } else {
-        dom.dockNextBtn.querySelector(".dock-text").textContent = "完了へ";
-        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">左にスライドで完了</span>`;
-      }
+      dom.dockNextBtn.querySelector(".dock-text").textContent = "完了へ";
+      dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">左にスライドで完了</span>`;
     }
   }
 
