@@ -6,7 +6,7 @@
  * ② グループ画面: 接続ごとの助動詞リスト（意味・用法は記載しない）
  * ③ 活用表: 8行×2列（右列: ラベル、左列: 回答。1行目「基本形」と8行目「活用の型」は常時表示、2〜7行目はタップで表示。1行目タップで全表示。上部見出しは削除して上詰め表示）
  * ④ 主な意味: 空白の数は意味の数と完全に一致。タップで表示。
- * ⑤ 下にスライド or 下ボタンで、本のページをめくるような3Dアニメーションで遷移。
+ * ⑤ 右にスライド or 右ボタン（次へ）で、本のページをめくるような3Dアニメーションで遷移。
  */
 
 (function () {
@@ -532,7 +532,7 @@
   }
 
   /**
-   * 上部バッジと下部ドック操作の更新
+   * 上部バッジと下部ドック操作の更新（右ボタン / 左ボタン、右スライド表記）
    */
   function updateHeaderAndDock() {
     // 完了ステップの場合
@@ -551,29 +551,29 @@
     // 上部バッジ更新
     dom.studyStepBadge.textContent = `${currentVerb.name} [${isConjugation ? "活用表" : "主な意味"}] (${currentStepIndex + 1} / ${totalSteps})`;
 
-    // 上ボタン（前へ）
+    // 左ボタン（前へ）
     dom.dockPrevBtn.disabled = currentStepIndex <= 0;
 
-    // 下ボタン（次へ）
+    // 右ボタン（次へ）
     dom.dockNextBtn.style.display = "flex";
     if (isConjugation) {
       dom.dockNextBtn.querySelector(".dock-text").textContent = "主な意味へ";
-      dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">ページをめくって意味へ</span>`;
+      dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">右にスライドで意味へ</span>`;
     } else {
       const nextVerbIndex = verbIndex + 1;
       if (nextVerbIndex < currentGroup.items.length) {
         const nextVerb = currentGroup.items[nextVerbIndex];
         dom.dockNextBtn.querySelector(".dock-text").textContent = `「${nextVerb.name}」へ`;
-        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">ページをめくって次の助動詞へ</span>`;
+        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">右にスライドで次の助動詞へ</span>`;
       } else {
         dom.dockNextBtn.querySelector(".dock-text").textContent = "完了へ";
-        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">ページをめくって完了</span>`;
+        dom.dockCenterIndicator.innerHTML = `<span class="indicator-label">右にスライドで完了</span>`;
       }
     }
   }
 
   /**
-   * 次のステップへ進む（下へスライド / 下ボタン）: 本のページめくり (Forward)
+   * 次のステップへ進む（右へスライド / 右ボタン）: 本のページめくり (Forward)
    */
   function goToNextStep() {
     if (isAnimating) return;
@@ -585,7 +585,7 @@
   }
 
   /**
-   * 前のステップへ戻る（上へスライド / 上ボタン）: 本のページめくり (Backward)
+   * 前のステップへ戻る（左へスライド / 左ボタン）: 本のページめくり (Backward)
    */
   function goToPrevStep() {
     if (isAnimating) return;
@@ -597,7 +597,7 @@
   }
 
   // =========================================================================
-  // タッチスワイプ（指で下にスライド・上にスライド）の検知
+  // タッチスワイプ（指で右にスライドで次へ・左にスライドで前へ）の検知
   // =========================================================================
   function setupSwipeHandlers() {
     let touchStartY = 0;
@@ -616,17 +616,17 @@
 
     container.addEventListener("touchend", (e) => {
       if (e.changedTouches.length === 1) {
-        const deltaY = e.changedTouches[0].clientY - touchStartY;
         const deltaX = e.changedTouches[0].clientX - touchStartX;
+        const deltaY = e.changedTouches[0].clientY - touchStartY;
         const duration = Date.now() - touchStartTime;
 
-        // 縦方向のスワイプ判定
-        if (Math.abs(deltaY) > 45 && Math.abs(deltaY) > Math.abs(deltaX) * 1.2 && duration < 600) {
-          if (deltaY < -35) {
-            // 指を上にスワイプ（画面を下へめくって次へ進む）
+        // 横方向のスワイプ判定（上下の意図しないスクロールと区別するため abs(deltaX) > abs(deltaY) * 1.2）
+        if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2 && duration < 600) {
+          if (deltaX > 35) {
+            // 指を右にスライド（本のページをめくって次へ進む）
             goToNextStep();
-          } else if (deltaY > 35) {
-            // 指を下にスワイプ（前のページへ戻る）
+          } else if (deltaX < -35) {
+            // 指を左にスライド（前のページへ戻る）
             goToPrevStep();
           }
         }
@@ -647,9 +647,19 @@
       switchView("group");
     });
 
-    // 下部ドックボタン
+    // 下部ドックボタン（右ボタン: 次へ、左ボタン: 前へ）
     dom.dockNextBtn.addEventListener("click", goToNextStep);
     dom.dockPrevBtn.addEventListener("click", goToPrevStep);
+
+    // キーボード操作対応（PC / Mac / iPad外付けキーボードで右キー・左キー対応）
+    window.addEventListener("keydown", (e) => {
+      if (!dom.studyView.classList.contains("active-view")) return;
+      if (e.key === "ArrowRight") {
+        goToNextStep();
+      } else if (e.key === "ArrowLeft") {
+        goToPrevStep();
+      }
+    });
 
     // スワイプ検知
     setupSwipeHandlers();
