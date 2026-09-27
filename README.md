@@ -5,14 +5,35 @@
 
 ---
 
+## 🔒 限定公開（実質的にリンクを知っている人のみアクセス可能にする設定）
+
+不特定多数の人にアクセスされたりGoogle検索で見つかったりするのを防ぐため、以下の2重対策を施しています。
+
+### 1. Google検索の対象から外す（検索避け対策済み）
+* **`index.html` のメタタグ**: `<meta name="robots" content="noindex, nofollow">` を `<head>` 内に記述済みです。
+* **`robots.txt`**: 検索エンジンのクローラー巡回を遮断する設定ファイルを配置済みです。
+* これにより、第三者が「古文 助動詞」などでGoogle検索しても、検索結果にサイトが表示されません。
+
+### 2. URLを予測されにくいものにする（リポジトリ名の工夫）
+GitHub Pagesの公開URLは、以下のように決まります。  
+`https://<あなたのGitHub_ID>.github.io/<リポジトリ名>/`
+
+そのため、GitHubで新しいリポジトリを作成する際に、リポジトリ名を **予測されにくい英数字** に設定してください。
+* **おすすめのリポジトリ名例**: `kobun-jodoushi-12345` や `kobun-jodoushi-x8k2p`
+* **完成するURL**: `https://<あなたのGitHub_ID>.github.io/kobun-jodoushi-12345/`
+* このURLをLINE等で従弟様に共有すれば、「リンクを知っている人だけがアクセスできる状態」になります。
+
+---
+
 ## 📂 ファイル構成
 
 ```text
 Rihito/
-├── index.html   # アプリケーションの画面構造（モバイルファースト）
+├── index.html   # アプリケーションの画面構造（noindex設定済み）
 ├── style.css    # スマートフォン向けUIデザイン・アニメーション定義
 ├── data.js      # 助動詞データ（ここを編集して新しい助動詞を追加）
 ├── app.js       # 画面遷移、個別表示・一括表示などのロジック
+├── robots.txt   # 検索エンジンのクローラー除外設定
 └── README.md    # 本マニュアル（更新・運用手順）
 ```
 
@@ -21,9 +42,9 @@ Rihito/
 ## 🚀 ローカルでの動作確認方法
 
 1. Finderで `Rihito` フォルダを開きます。
-2. `index.html` をダブルクリックして、普段お使いのブラウザ（Safari, Chromeなど）で開きます。
+2. `index.html` をダブルクリックして、ブラウザ（Safari, Chromeなど）で開きます。
 3. 画面のレイアウトや、マスタップ・原形ヘッダータップによる一括表示アニメーションの動作を確認してください。  
-   ※ブラウザの開発者ツール（F12、または右クリック「検証」）で「モバイル表示（デバイスツールバー）」に切り替えると、スマートフォン実機での見え方を確認できます。
+   ※ブラウザの開発者ツール（F12、または右クリック「検証」）で「モバイル表示」に切り替えると、スマホ実機での見え方を確認できます。
 
 ---
 
@@ -64,37 +85,37 @@ Rihito/
 
 ---
 
-## 🌐 GitHub Pages への公開・更新手順
+## 🌐 GitHub Pages への公開手順
 
-### 初回セットアップ（GitHubリポジトリ作成時）
-ターミナルを開き、`Rihito` フォルダに移動して以下を実行します。
+### 初回セットアップ
+GitHub上で新しいリポジトリを **`kobun-jodoushi-12345`**（予測されにくい名前）として作成（Public）します。  
+その後、Macのターミナルで `Rihito` フォルダに移動して以下を実行します。
 
 ```bash
 cd /Users/yamato_mba/Study_UTokyo/Rihito
 
-# Gitリポジトリの初期化
-git init
+# 変更をステージ・コミット
 git add .
-git commit -m "Initial commit: 古文助動詞暗記アプリの初期作成"
+git commit -m "Add noindex meta tag and robots.txt for privacy"
 
-# GitHubにリポジトリを作成後、リモートURLを紐付け
+# リモートURLを紐付け（リポジトリ名を予測されにくいものに指定）
 git branch -M main
-git remote add origin https://github.com/<あなたのユーザー名>/<リポジトリ名>.git
+git remote add origin https://github.com/<あなたのユーザー名>/kobun-jodoushi-12345.git
 git push -u origin main
 ```
 
-#### GitHub側の設定（GitHub Pagesの有効化）
+#### GitHub Pages の有効化
 1. GitHubの該当リポジトリのページを開きます。
 2. 上部メニューの **「Settings」** をクリックします。
 3. 左サイドバーの **「Pages」** をクリックします。
 4. **Build and deployment** の **Source** で「Deploy from a branch」を選択します。
 5. **Branch** で `main` ブランチ、フォルダは `/ (root)` を選択し、**Save** をクリックします。
-6. 数分待つと、発行されたURL（例: `https://<ユーザー名>.github.io/<リポジトリ名>/`）からスマートフォンでアクセスできるようになります。
+6. 数分待つと、`https://<ユーザー名>.github.io/kobun-jodoushi-12345/` でアプリが公開されます。
 
 ---
 
 ### 日常の更新手順（助動詞を追加した時）
-`data.js` を編集・保存した後、ターミナルで以下の3行を実行するだけで自動更新されます。
+`data.js` を編集・保存した後、ターミナルで以下のコマンドを実行するだけで自動更新されます。
 
 ```bash
 cd /Users/yamato_mba/Study_UTokyo/Rihito
@@ -104,4 +125,4 @@ git commit -m "助動詞『す・さす』を追加"
 git push
 ```
 
-プッシュ後、1〜2分程度でGitHub Pagesが自動更新され、従弟がスマートフォンでアクセスした際に新しい助動詞が反映されます。
+プッシュ後、1〜2分程度でGitHub Pagesが自動更新され、従弟様がスマートフォンでアクセスした際に新しい助動詞が反映されます。

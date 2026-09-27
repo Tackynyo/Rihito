@@ -1,0 +1,3 @@
+# Googleおよびすべての検索エンジンのクローラー巡回を遮断（検索避け）
+User-agent: *
+Disallow: /
