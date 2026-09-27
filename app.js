@@ -470,7 +470,6 @@
           <span class="card-target-name">${step.title}</span>
           <span class="card-mode-badge">主な意味（全${meaningCount}つ）</span>
         </div>
-        <span class="card-hint-text">各マスをタップして確認</span>
       </div>
     `;
 
