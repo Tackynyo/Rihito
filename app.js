@@ -271,6 +271,7 @@
 
   /**
    * ① 検索処理（助動詞と主な意味でヒット、接続名を常に右側に表示）
+   * 検索機能使用中は検索結果のみを表示し、接続一覧は完全に非表示
    */
   function handleSearch() {
     const rawQuery = dom.searchInput.value.trim();
@@ -278,7 +279,9 @@
 
     if (!rawQuery) {
       dom.searchResultsContainer.setAttribute("hidden", "true");
+      dom.searchResultsContainer.style.display = "none";
       dom.connectionList.removeAttribute("hidden");
+      dom.connectionList.style.display = "";
       return;
     }
 
@@ -305,9 +308,11 @@
       });
     });
 
-    // 検索結果表示切り替え
+    // 検索結果表示切り替え（検索中：接続一覧を非表示、検索結果を表示）
     dom.connectionList.setAttribute("hidden", "true");
+    dom.connectionList.style.display = "none";
     dom.searchResultsContainer.removeAttribute("hidden");
+    dom.searchResultsContainer.style.display = "flex";
     dom.searchCountBadge.textContent = `${results.length}件ヒット`;
     dom.searchResultsList.innerHTML = "";
 
@@ -431,12 +436,10 @@
       card.setAttribute("tabindex", "0");
       card.setAttribute("aria-label", `${tip.title}`);
 
+      // 要件③: 「む・むず 未然形接続」のみ表示（合言葉は表示しない）
       card.innerHTML = `
         <div class="tip-item-left">
           <div class="tip-item-title">${tip.title}</div>
-          <div>
-            <span class="tip-phrase-badge">合言葉: ${tip.phrase}</span>
-          </div>
         </div>
         <div class="group-item-arrow">&rsaquo;</div>
       `;
@@ -470,8 +473,12 @@
     }
 
     dom.tipDetailTitle.textContent = tip.title;
-    dom.tipDetailDesc.textContent = tip.description;
-    dom.tipPhraseDisplay.textContent = tip.phrase;
+    if (dom.tipDetailDesc) {
+      dom.tipDetailDesc.textContent = "文字をタップすると主な意味が表示されます";
+    }
+    if (dom.tipPhraseDisplay) {
+      dom.tipPhraseDisplay.textContent = tip.phrase;
+    }
 
     // 各文字ボタンを生成（タップでポップアップ）
     dom.tipCharsGrid.innerHTML = "";
@@ -480,7 +487,10 @@
       btn.className = "tip-char-btn";
       btn.setAttribute("type", "button");
       btn.setAttribute("aria-label", `${charItem.char}の意味を見る`);
-      btn.innerHTML = `<span class="tip-char-btn-text">${charItem.char}</span>`;
+
+      const charLen = charItem.char.length;
+      const sizeAttr = charLen > 2 ? ' style="font-size: 1.05rem;"' : (charLen === 2 ? ' style="font-size: 1.2rem;"' : '');
+      btn.innerHTML = `<span class="tip-char-btn-text"${sizeAttr}>${charItem.char}</span>`;
 
       btn.addEventListener("click", () => {
         openCharPopup(charItem);
@@ -494,9 +504,23 @@
 
   /**
    * 文字タップ時のポップアップ表示
+   * 要件⑤: 「まじ」の「打消ス」などの複数文字も縦並びにならず綺麗に横並びで表示
    */
   function openCharPopup(charItem) {
     dom.popupChar.textContent = charItem.char;
+
+    const charLen = charItem.char.length;
+    if (charLen > 2) {
+      dom.popupChar.style.fontSize = "1.2rem";
+      dom.popupChar.style.padding = "6px 16px";
+    } else if (charLen === 2) {
+      dom.popupChar.style.fontSize = "1.35rem";
+      dom.popupChar.style.padding = "6px 14px";
+    } else {
+      dom.popupChar.style.fontSize = "1.6rem";
+      dom.popupChar.style.padding = "6px 14px";
+    }
+
     dom.popupMeaning.textContent = charItem.meaning;
     dom.popupNote.textContent = charItem.note || "";
     dom.charPopupModal.removeAttribute("hidden");
@@ -746,12 +770,13 @@
     });
     quickBar.appendChild(resetBtn);
 
-    // 右側ボタン: 語呂の画面がある場合はボタンを配置、ない場合は空白
+    // 右側ボタン: 語呂の画面がある場合は「語呂」のみを表示、ない場合は空白
     if (tip) {
       const tipBtn = document.createElement("button");
       tipBtn.className = "quick-btn quick-btn-tip";
       tipBtn.id = "btn-goto-tip";
-      tipBtn.textContent = `💡 語呂「${tip.phrase}」`;
+      tipBtn.textContent = "語呂";
+      tipBtn.setAttribute("aria-label", `${verb.name}の語呂合わせ画面へ`);
       tipBtn.addEventListener("click", () => {
         openTipDetailView(tip, true);
       });

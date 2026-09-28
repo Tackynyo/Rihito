@@ -696,7 +696,7 @@ const connectionCategories = [
 const tipsData = [
   {
     id: "mu_muzu",
-    title: "む・むず (未然形接続)",
+    title: "む・むず 未然形接続",
     verbNames: ["む", "むず"],
     connectionName: "未然形接続",
     categoryId: "mizen",
@@ -715,7 +715,7 @@ const tipsData = [
   },
   {
     id: "beshi",
-    title: "べし (終止形接続)",
+    title: "べし 終止形接続",
     verbNames: ["べし"],
     connectionName: "終止形接続",
     categoryId: "shuushi",
@@ -734,7 +734,7 @@ const tipsData = [
   },
   {
     id: "ru_raru",
-    title: "る・らる (未然形接続)",
+    title: "る・らる 未然形接続",
     verbNames: ["る", "らる"],
     connectionName: "未然形接続",
     categoryId: "mizen",
@@ -751,7 +751,7 @@ const tipsData = [
   },
   {
     id: "maji",
-    title: "まじ (終止形接続)",
+    title: "まじ 終止形接続",
     verbNames: ["まじ"],
     connectionName: "終止形接続",
     categoryId: "shuushi",
@@ -770,7 +770,7 @@ const tipsData = [
   },
   {
     id: "ri",
-    title: "り (その他接続)",
+    title: "り その他接続",
     verbNames: ["り"],
     connectionName: "その他接続",
     categoryId: "others",

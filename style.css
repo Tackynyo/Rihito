@@ -43,6 +43,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   font-family: "Zen Kaku Gothic New", -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
   background-color: var(--color-bg-app);
@@ -195,6 +199,10 @@ body {
   gap: 12px;
 }
 
+.category-list[hidden] {
+  display: none !important;
+}
+
 .category-card {
   display: flex;
   align-items: center;
@@ -338,15 +346,15 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-bottom: 70px; /* 下部ドック用の余白 */
+  margin-bottom: 70px;
   touch-action: pan-y;
   position: relative;
   min-height: 460px;
   perspective: 1200px;
-  perspective-origin: 15% 50%; /* 本の背表紙（左側）を意識した視点 */
+  perspective-origin: 15% 50%;
 }
 
-/* カード共通スタイル（本の一枚のページ） */
+/* カード共通スタイル */
 .study-card {
   background-color: #ffffff;
   border: 1.5px solid var(--color-border);
@@ -359,12 +367,10 @@ body {
   position: relative;
   backface-visibility: hidden;
   transform-style: preserve-3d;
-  transform-origin: left center; /* 左側の綴じ目を軸にめくる */
+  transform-origin: left center;
 }
 
-/* ==========================================================================
-   要件1対応: 8行×2列 活用表カード（上部の助動詞・見出しを削除して上に詰める）
-   ========================================================================== */
+/* 活用表カード */
 .table-study-card {
   padding: 8px 10px 12px 10px;
 }
@@ -411,11 +417,7 @@ body {
   color: var(--color-text-muted);
 }
 
-/* ==========================================================================
-   要件2対応: 本のページめくりアニメーション（3D Flip & Paper Curl）
-   ========================================================================== */
-
-/* 1. 次へ進む（Forward）: 現在のページが左へめくれて消える */
+/* ページめくりアニメーション */
 .study-card.page-turning-forward {
   position: absolute;
   top: 0;
@@ -425,7 +427,6 @@ body {
   pointer-events: none;
 }
 
-/* めくれる紙のカーブ陰影 */
 .study-card.page-turning-forward::after {
   content: "";
   position: absolute;
@@ -463,7 +464,6 @@ body {
   100% { opacity: 0.9; }
 }
 
-/* 次へ進む時、下から現れる新しいページ */
 .study-card.page-revealing-forward {
   position: relative;
   z-index: 5;
@@ -486,7 +486,6 @@ body {
   }
 }
 
-/* 2. 前へ戻る（Backward）: 前のページが左からめくられて戻ってくる */
 .study-card.page-revealing-backward {
   position: absolute;
   top: 0;
@@ -529,7 +528,6 @@ body {
   100% { opacity: 0; }
 }
 
-/* 前へ戻る時、下のページが背後に沈む */
 .study-card.page-hiding-backward {
   position: relative;
   z-index: 5;
@@ -547,9 +545,7 @@ body {
   }
 }
 
-/* ==========================================================================
-   ③ 8行×2列 活用表の内部スタイル
-   ========================================================================== */
+/* 活用表内部スタイル */
 .table-wrapper {
   border: 2px solid var(--color-primary);
   border-radius: var(--radius-md);
@@ -572,7 +568,6 @@ body {
   border-bottom: none;
 }
 
-/* 左の列（回答・値の列）: 62% */
 .td-answer-col {
   width: 62%;
   padding: 5px 8px;
@@ -581,7 +576,6 @@ body {
   border-right: 2px solid var(--color-border);
 }
 
-/* 右の列（見出し・ラベルの列）: 38% */
 .th-label-col {
   width: 38%;
   padding: 6px 6px;
@@ -593,7 +587,6 @@ body {
   color: #4a5568;
 }
 
-/* 1行目（基本形）のスタイル: 常に表示＆タップで全表示 */
 .kihon-trigger-cell {
   background-color: #f8fbff;
   border-radius: var(--radius-sm);
@@ -634,7 +627,6 @@ body {
   margin-top: 1px;
 }
 
-/* 8行目（活用の型）のスタイル: 常に表示 */
 .type-static-cell {
   font-size: 0.9rem;
   font-weight: 700;
@@ -647,7 +639,6 @@ body {
   justify-content: center;
 }
 
-/* 2〜7行目のマス（初期は空白、タップで表示） */
 .cell-box {
   min-height: 38px;
   border-radius: var(--radius-sm);
@@ -659,7 +650,6 @@ body {
   transition: all var(--transition-fast);
 }
 
-/* 隠れている状態 */
 .cell-box.is-hidden {
   background-color: var(--color-bg-cover);
   border: 1.5px dashed var(--color-border-dark);
@@ -686,7 +676,6 @@ body {
   gap: 2px;
 }
 
-/* 表示された状態（ふわっとアニメーション） */
 .cell-box.is-revealed {
   background-color: var(--color-accent-soft);
   border: 1.5px solid rgba(197, 48, 48, 0.4);
@@ -734,10 +723,7 @@ body {
   transform: scale(0.97);
 }
 
-/* ==========================================================================
-   ④ 主な意味 画面のスタイル
-   空白の数は「主な意味」の数と完全に一致
-   ========================================================================== */
+/* 主な意味画面 */
 .meanings-container {
   display: flex;
   flex-direction: column;
@@ -758,7 +744,6 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-/* 隠れている状態 */
 .meaning-slot-box.is-hidden {
   background-color: var(--color-bg-cover);
   border: 1.5px dashed var(--color-border-dark);
@@ -798,7 +783,6 @@ body {
   color: #a0aec0;
 }
 
-/* 表示された状態（ふわっとアニメーション） */
 .meaning-slot-box.is-revealed {
   background-color: var(--color-accent-soft);
   border: 1.5px solid rgba(197, 48, 48, 0.35);
@@ -865,9 +849,7 @@ body {
   margin-top: 10px;
 }
 
-/* ==========================================================================
-   ⑤ 画面下部 ドック型スライドコントローラー（下ボタン / 上ボタン）
-   ========================================================================== */
+/* 下部ドック */
 .study-bottom-dock {
   position: fixed;
   bottom: 0;
@@ -948,7 +930,6 @@ body {
   margin-top: auto;
 }
 
-/* PC等大画面時の表示調整 */
 /* ==========================================================================
    検索バー・検索結果スタイル
    ========================================================================== */
@@ -994,6 +975,10 @@ body {
   flex-direction: column;
   gap: 10px;
   margin-bottom: 16px;
+}
+
+.search-results-container[hidden] {
+  display: none !important;
 }
 
 .search-results-header {
@@ -1144,16 +1129,6 @@ body {
   color: var(--color-primary);
 }
 
-.tip-phrase-badge {
-  display: inline-block;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #975a16;
-  background-color: #fefcbf;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-}
-
 /* Tips 詳細画面 */
 .tip-detail-card {
   background-color: #ffffff;
@@ -1195,56 +1170,21 @@ body {
   color: var(--color-text-muted);
 }
 
-/* 語呂合わせバナー */
-.mnemonic-banner {
-  background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
-  border: 2px solid #f6ad55;
-  border-radius: var(--radius-md);
-  padding: 16px;
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-}
-
-.mnemonic-sublabel {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #7b341e;
-  letter-spacing: 0.1em;
-  margin-bottom: 6px;
-}
-
-.mnemonic-phrase {
-  font-family: "Shippori Mincho", serif;
-  font-size: 2.1rem;
-  font-weight: 800;
-  color: #7b341e;
-  letter-spacing: 0.12em;
-  line-height: 1.2;
-}
-
-.mnemonic-hint {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #9c4221;
-  margin-top: 8px;
-}
-
 /* インタラクティブ文字グリッド */
 .tip-chars-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
-  margin: 6px 0;
+  margin: 12px 0 16px 0;
 }
 
 .tip-char-btn {
   background: #ffffff;
   border: 2px solid var(--color-primary);
   border-radius: var(--radius-md);
-  min-width: 52px;
-  min-height: 52px;
+  min-width: 48px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1252,7 +1192,8 @@ body {
   user-select: none;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
-  padding: 6px;
+  padding: 8px 12px;
+  white-space: nowrap;
 }
 
 .tip-char-btn:hover {
@@ -1267,9 +1208,11 @@ body {
 
 .tip-char-btn-text {
   font-family: "Shippori Mincho", serif;
-  font-size: 1.45rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: var(--color-primary);
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .tip-actions-bar {
@@ -1293,7 +1236,7 @@ body {
 }
 
 .popup-modal-overlay[hidden] {
-  display: none;
+  display: none !important;
 }
 
 .popup-modal-card {
@@ -1330,19 +1273,26 @@ body {
 }
 
 .popup-char-badge {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
+  min-width: 52px;
+  max-width: 90%;
+  width: auto;
+  height: auto;
+  min-height: 52px;
+  padding: 6px 18px;
+  border-radius: var(--radius-full);
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font-family: "Shippori Mincho", serif;
-  font-size: 1.7rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
   border: 1.5px solid rgba(30, 58, 95, 0.2);
+  white-space: nowrap;
+  box-sizing: border-box;
+  line-height: 1.2;
 }
 
 .popup-meta-label {
