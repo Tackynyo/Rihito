@@ -28,16 +28,28 @@
     <main class="main-content">
 
       <!-- =================================================================
-           画面①: ホーム画面（接続ごとの一覧リスト）
+           画面①: ホーム画面（検索窓 ＋ 接続一覧 ＋ 暗記お助けTips）
            ================================================================= -->
-      <section id="home-view" class="view active-view" aria-label="接続一覧">
-        <div class="view-intro">
-          <div class="intro-badge">接続から選ぶ</div>
-          <p class="intro-text">学習したい「接続」をタップして助動詞を選びましょう。</p>
+      <section id="home-view" class="view active-view" aria-label="ホーム画面">
+        <!-- 検索バー（助動詞と主な意味でヒット） -->
+        <div class="search-box-wrapper">
+          <input type="text" id="search-input" class="search-input" placeholder="助動詞・主な意味で検索 (例: 過去, る, 推量)..." autocomplete="off" aria-label="助動詞名や主な意味で検索">
+          <button id="clear-search-btn" class="clear-search-btn" aria-label="検索クリア" hidden>&times;</button>
         </div>
 
+        <!-- 検索結果一覧（検索キーワード入力時のみ表示） -->
+        <div id="search-results-container" class="search-results-container" hidden>
+          <div class="search-results-header">
+            <span class="search-count-badge" id="search-count-badge">0件ヒット</span>
+          </div>
+          <div id="search-results-list" class="search-results-list" role="list">
+            <!-- app.js から動的生成 -->
+          </div>
+        </div>
+
+        <!-- 通常の接続一覧リスト（1〜5: 接続、6: 暗記お助けTips） -->
         <div id="connection-list" class="category-list" role="list">
-          <!-- data.js から動的に生成 (未然形接続, 連用形接続, 終止形接続, 体言・連体形・一部助詞接続, その他接続) -->
+          <!-- data.js から動的に生成 -->
         </div>
       </section>
 
@@ -67,8 +79,8 @@
       <section id="study-view" class="view" aria-label="暗記学習" hidden>
         <!-- 上部ナビゲーションバー -->
         <nav class="study-top-nav">
-          <button id="back-to-groups-btn" class="nav-btn" aria-label="助動詞リストに戻る">
-            <span class="icon">&larr;</span> リスト
+          <button id="back-to-groups-btn" class="nav-btn" aria-label="戻る">
+            <span class="icon">&larr;</span> <span id="back-btn-label">リスト</span>
           </button>
           <div class="study-step-badge" id="study-step-badge">
             1 / 4
@@ -88,7 +100,7 @@
           </button>
           
           <div class="dock-center-indicator" id="dock-center-indicator">
-            <span class="indicator-label">右にスライドで次へ</span>
+            <span class="indicator-label">左にスライドで次へ</span>
           </div>
 
           <button id="dock-next-btn" class="dock-nav-btn next-btn" aria-label="次の画面へ">
@@ -98,7 +110,77 @@
         </footer>
       </section>
 
+      <!-- =================================================================
+           画面⑥: 暗記お助けTips一覧画面
+           ================================================================= -->
+      <section id="tips-list-view" class="view" aria-label="暗記お助けTips一覧" hidden>
+        <nav class="sub-nav">
+          <button id="back-from-tips-btn" class="nav-btn" aria-label="ホームに戻る">
+            <span class="icon">&larr;</span> ホームに戻る
+          </button>
+        </nav>
+
+        <div class="view-intro">
+          <h2 class="section-title">💡 暗記お助けTips</h2>
+          <p class="intro-text">語呂合わせで覚える助動詞の主な意味・用法一覧です。</p>
+        </div>
+
+        <div id="tips-items-list" class="tips-items-list" role="list">
+          <!-- app.js から動的に生成 (「む・むず (未然形接続)」「べし (終止形接続)」など) -->
+        </div>
+      </section>
+
+      <!-- =================================================================
+           画面⑦: 暗記お助けTips詳細画面（語呂表示 ＋ 各文字タップでポップアップ）
+           ================================================================= -->
+      <section id="tip-detail-view" class="view" aria-label="語呂詳細" hidden>
+        <nav class="sub-nav">
+          <button id="back-from-tip-detail-btn" class="nav-btn" aria-label="Tips一覧に戻る">
+            <span class="icon">&larr;</span> <span id="tip-back-btn-label">Tips一覧</span>
+          </button>
+        </nav>
+
+        <div class="tip-detail-card">
+          <div class="tip-detail-header">
+            <span class="tip-badge">語呂合わせ</span>
+            <h2 id="tip-detail-title" class="tip-target-title">む・むず (未然形接続)</h2>
+            <p id="tip-detail-desc" class="tip-target-desc">「む・むず」の主な意味を覚える語呂合わせ</p>
+          </div>
+
+          <!-- メイン語呂合わせ表示ブロック -->
+          <div class="mnemonic-banner">
+            <span class="mnemonic-sublabel">合言葉</span>
+            <div id="tip-phrase-display" class="mnemonic-phrase">スイカかえて</div>
+            <p class="mnemonic-hint">👇 文字をタップすると意味が表示されます</p>
+          </div>
+
+          <!-- 各文字インタラクティブボタン群 -->
+          <div id="tip-chars-grid" class="tip-chars-grid">
+            <!-- app.js から各文字タイルを動的に生成 -->
+          </div>
+
+          <!-- 下部アクション: 活用表に直接遷移 -->
+          <div class="tip-actions-bar">
+            <button id="btn-go-to-conjugation" class="btn btn-primary" style="width: 100%;">
+              <span>📖 この助動詞の活用表を表示</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
     </main>
+
+    <!-- 文字タップ時のポップアップモーダル -->
+    <div id="char-popup-modal" class="popup-modal-overlay" hidden aria-hidden="true">
+      <div class="popup-modal-card" role="dialog" aria-modal="true" aria-labelledby="popup-meaning">
+        <button id="popup-close-btn" class="popup-close-btn" aria-label="閉じる">&times;</button>
+        <div class="popup-char-badge" id="popup-char">ス</div>
+        <div class="popup-meta-label">対応する主な意味</div>
+        <div class="popup-meaning" id="popup-meaning">推量</div>
+        <div class="popup-note" id="popup-note">〜だろう</div>
+        <button id="popup-ok-btn" class="btn btn-primary popup-ok-btn">OK</button>
+      </div>
+    </div>
 
     <!-- アプリ共通フッター -->
     <footer class="app-footer">

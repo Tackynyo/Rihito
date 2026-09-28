@@ -949,6 +949,448 @@ body {
 }
 
 /* PC等大画面時の表示調整 */
+/* ==========================================================================
+   検索バー・検索結果スタイル
+   ========================================================================== */
+.search-box-wrapper {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 38px 12px 14px;
+  font-size: 0.92rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: #ffffff;
+  color: var(--color-text-main);
+  outline: none;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.search-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+.search-results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.search-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-count-badge {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.search-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.search-result-card {
+  background-color: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.search-result-card:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.search-result-card:active {
+  transform: scale(0.98);
+  background-color: var(--color-primary-soft);
+}
+
+.search-result-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.search-result-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.search-verb-name {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.search-conn-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #4a5568;
+  background-color: #edf2f7;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.search-result-meanings {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.3;
+}
+
+.search-no-results {
+  text-align: center;
+  padding: 28px 16px;
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   暗記お助けTips カテゴリカード & 一覧 & 詳細
+   ========================================================================== */
+.tips-category-card {
+  border-color: #d69e2e !important;
+  background: linear-gradient(145deg, #ffffff 0%, #fffdfa 100%);
+}
+
+.tips-category-card .category-number-badge {
+  background-color: #fefcbf;
+  color: #b7791f;
+}
+
+.tips-category-card .category-name {
+  color: #744210;
+}
+
+.tips-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tip-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.tip-item-card:hover {
+  border-color: #d69e2e;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.tip-item-card:active {
+  transform: scale(0.98);
+  background-color: #fffdfa;
+}
+
+.tip-item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tip-item-title {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.tip-phrase-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #975a16;
+  background-color: #fefcbf;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+/* Tips 詳細画面 */
+.tip-detail-card {
+  background-color: #ffffff;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tip-detail-header {
+  border-bottom: 1px dashed var(--color-border);
+  padding-bottom: 12px;
+}
+
+.tip-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #b7791f;
+  background-color: #fefcbf;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  margin-bottom: 6px;
+}
+
+.tip-target-title {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  margin-bottom: 4px;
+}
+
+.tip-target-desc {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+/* 語呂合わせバナー */
+.mnemonic-banner {
+  background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
+  border: 2px solid #f6ad55;
+  border-radius: var(--radius-md);
+  padding: 16px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.mnemonic-sublabel {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #7b341e;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.mnemonic-phrase {
+  font-family: "Shippori Mincho", serif;
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #7b341e;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+}
+
+.mnemonic-hint {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #9c4221;
+  margin-top: 8px;
+}
+
+/* インタラクティブ文字グリッド */
+.tip-chars-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 6px 0;
+}
+
+.tip-char-btn {
+  background: #ffffff;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  min-width: 52px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  padding: 6px;
+}
+
+.tip-char-btn:hover {
+  background-color: var(--color-primary-soft);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.tip-char-btn:active {
+  transform: scale(0.92);
+}
+
+.tip-char-btn-text {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.tip-actions-bar {
+  margin-top: 8px;
+}
+
+/* ==========================================================================
+   ポップアップモーダル（主な意味の表示）
+   ========================================================================== */
+.popup-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 20px;
+  animation: fadeIn 0.18s ease-out;
+}
+
+.popup-modal-overlay[hidden] {
+  display: none;
+}
+
+.popup-modal-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  max-width: 320px;
+  width: 100%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  position: relative;
+  animation: scalePopIn 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@keyframes scalePopIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.popup-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 8px;
+}
+
+.popup-char-badge {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  border: 1.5px solid rgba(30, 58, 95, 0.2);
+}
+
+.popup-meta-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.popup-meaning {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--color-accent);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.popup-note {
+  font-size: 0.85rem;
+  color: #4a5568;
+  margin-bottom: 18px;
+}
+
+.popup-ok-btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   活用表下のボタン配置（左: もう一度隠す、右: 語呂合わせへ or 空白）
+   ========================================================================== */
+.quick-btn-tip {
+  background-color: #fffaf0;
+  border-color: #f6ad55;
+  color: #9c4221;
+}
+
+.quick-btn-tip:hover {
+  background-color: #feebc8;
+}
+
+.quick-btn-placeholder {
+  flex: 1;
+  visibility: hidden;
+}
+
 @media (min-width: 640px) {
   body {
     padding: 24px 0;

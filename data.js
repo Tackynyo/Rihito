@@ -689,3 +689,102 @@ const connectionCategories = [
     ]
   }
 ];
+
+/**
+ * 暗記お助けTips（語呂合わせ）データ
+ */
+const tipsData = [
+  {
+    id: "mu_muzu",
+    title: "む・むず (未然形接続)",
+    verbNames: ["む", "むず"],
+    connectionName: "未然形接続",
+    categoryId: "mizen",
+    groupId: "mu_muzu_ji",
+    verbId: "mu",
+    phrase: "スイカかえて",
+    description: "「む・むず」の主な意味（推量・意志・勧誘・仮定・婉曲・適当）を覚える定番の語呂合わせです。",
+    chars: [
+      { char: "ス", meaning: "推量", note: "〜だろう" },
+      { char: "イ", meaning: "意志", note: "〜しよう" },
+      { char: "カ", meaning: "勧誘", note: "〜しませんか・〜してほしい" },
+      { char: "か", meaning: "仮定", note: "もし〜ならば" },
+      { char: "え", meaning: "婉曲", note: "〜のような" },
+      { char: "て", meaning: "適当", note: "〜するのがよい" }
+    ]
+  },
+  {
+    id: "beshi",
+    title: "べし (終止形接続)",
+    verbNames: ["べし"],
+    connectionName: "終止形接続",
+    categoryId: "shuushi",
+    groupId: "beshi_maji",
+    verbId: "beshi",
+    phrase: "スイカとめて",
+    description: "「べし」の主な意味（推量・意志・可能・当然・命令・適当）を覚える定番の語呂合わせです。",
+    chars: [
+      { char: "ス", meaning: "推量", note: "〜だろう" },
+      { char: "イ", meaning: "意志", note: "〜しよう" },
+      { char: "カ", meaning: "可能", note: "〜できる" },
+      { char: "と", meaning: "当然・義務", note: "〜はずだ・〜べきだ" },
+      { char: "め", meaning: "命令", note: "〜せよ" },
+      { char: "て", meaning: "適当", note: "〜するのがよい" }
+    ]
+  },
+  {
+    id: "ru_raru",
+    title: "る・らる (未然形接続)",
+    verbNames: ["る", "らる"],
+    connectionName: "未然形接続",
+    categoryId: "mizen",
+    groupId: "ru_raru",
+    verbId: "ru",
+    phrase: "じそんじか",
+    description: "「る・らる」の4つの主な意味（自発・尊敬・受身・可能）を覚える語呂合わせです。",
+    chars: [
+      { char: "じ", meaning: "自発", note: "自然と〜される・思われる" },
+      { char: "そん", meaning: "尊敬", note: "〜なさる・お〜になる" },
+      { char: "じ", meaning: "受身", note: "〜される" },
+      { char: "か", meaning: "可能", note: "〜できる" }
+    ]
+  },
+  {
+    id: "maji",
+    title: "まじ (終止形接続)",
+    verbNames: ["まじ"],
+    connectionName: "終止形接続",
+    categoryId: "shuushi",
+    groupId: "beshi_maji",
+    verbId: "maji",
+    phrase: "打消スイカとめて",
+    description: "「べし（スイカとめて）」の打消バージョンです。6つの意味すべてに「打消」がつきます。",
+    chars: [
+      { char: "打消ス", meaning: "打消推量", note: "〜ないだろう" },
+      { char: "打消イ", meaning: "打消意志", note: "〜しないつもりだ" },
+      { char: "打消カ", meaning: "不可能", note: "〜できない" },
+      { char: "打消と", meaning: "打消当然", note: "〜はずがない" },
+      { char: "打消め", meaning: "禁止", note: "〜してはならない" },
+      { char: "打消て", meaning: "不適当", note: "〜しないほうがよい" }
+    ]
+  },
+  {
+    id: "ri",
+    title: "り (その他接続)",
+    verbNames: ["り"],
+    connectionName: "その他接続",
+    categoryId: "others",
+    groupId: "ri",
+    verbId: "ri_item",
+    phrase: "サ未四已（さみしい）",
+    description: "「り」の接続（サ変未然形・四段已然形）と意味（完了・存続）を覚える語呂合わせです。",
+    chars: [
+      { char: "サ", meaning: "サ変", note: "サ変動詞の未然形（せ）に接続" },
+      { char: "未", meaning: "未然形", note: "「せ＋り」" },
+      { char: "四", meaning: "四段", note: "四段動詞の已然形（え段）に接続" },
+      { char: "已", meaning: "已然形", note: "「咲け＋り」" },
+      { char: "か", meaning: "完了", note: "意味：〜た・〜てしまった" },
+      { char: "そん", meaning: "存続", note: "意味：〜ている・〜てある" }
+    ]
+  }
+];

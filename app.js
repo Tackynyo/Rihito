@@ -2,14 +2,13 @@
  * 古文 助動詞マスター アプリケーションロジック (app.js)
  * 
  * 仕様:
- * ① ホーム画面: 接続ごとの一覧（未然形、連用形、終止形、体言・連体形・一部助詞、その他）
- * ② グループ画面: 接続ごとの助動詞リスト（意味・用法は記載しない）
- * ③ 活用表: 8行×2列（右列: ラベル、左列: 回答。1行目「基本形」と8行目「活用の型」は常時表示、2〜7行目はタップで表示。1行目タップで全表示。上部見出しは削除して上詰め表示）
- * ④ 主な意味: 空白の数は意味の数と完全に一致。タップで表示。
- * ⑤ 活用表を最初に連続で表示 → その後に「主な意味」を表示。
- *    意味が完全に一致する助動詞（例:「る」と「らる」、「す」と「さす」と「しむ」）は同一画面にまとめて表示。
- * ⑥ 左にスライド（スワイプ） or 次へボタンで、本のページをめくるような3Dアニメーションで遷移。
- * ⑦ 画面上部のヘッダー（ネイビー部分含む）をタップするといつでもホーム画面に戻る。
+ * ① ホーム画面: 検索窓（助動詞と主な意味でヒット、接続を右側に表示） ＋ 接続一覧
+ * ② 暗記お助けTips: 6番目の項目として追加。語呂合わせ一覧と各文字タップでのポップアップ
+ * ③ 活用表: 8行×2列（1行目「基本形」タップで全表示。「すべて表示」ボタンを「もう一度隠す」に変更し、右側には語呂画面への遷移ボタン/空白を配置）
+ * ④ 完了画面: 「〜の学習完了！」「繰り返し復習することが重要です！」の表記
+ * ⑤ 活用表を最初に連続で表示 → 主な意味（共通統合）の順で表示
+ * ⑥ 左スワイプ or 次へボタンで、本のページをめくるような3Dアニメーションで遷移
+ * ⑦ ヘッダータップでいつでもホーム画面に戻る
  */
 
 (function () {
@@ -33,19 +32,51 @@
     homeView: document.getElementById("home-view"),
     groupView: document.getElementById("group-view"),
     studyView: document.getElementById("study-view"),
+    tipsListView: document.getElementById("tips-list-view"),
+    tipDetailView: document.getElementById("tip-detail-view"),
+
+    // 検索
+    searchInput: document.getElementById("search-input"),
+    clearSearchBtn: document.getElementById("clear-search-btn"),
+    searchResultsContainer: document.getElementById("search-results-container"),
+    searchResultsList: document.getElementById("search-results-list"),
+    searchCountBadge: document.getElementById("search-count-badge"),
     
+    // 接続一覧
     connectionList: document.getElementById("connection-list"),
+    
+    // グループ画面
     groupList: document.getElementById("group-list"),
     groupCategoryTitle: document.getElementById("group-category-title"),
-    
     backToHomeBtn: document.getElementById("back-to-home-btn"),
-    backToGroupsBtn: document.getElementById("back-to-groups-btn"),
     
+    // 学習画面
+    backToGroupsBtn: document.getElementById("back-to-groups-btn"),
+    backBtnLabel: document.getElementById("back-btn-label"),
     studyDeckContainer: document.getElementById("study-deck-container"),
     studyStepBadge: document.getElementById("study-step-badge"),
     dockPrevBtn: document.getElementById("dock-prev-btn"),
     dockNextBtn: document.getElementById("dock-next-btn"),
-    dockCenterIndicator: document.getElementById("dock-center-indicator")
+    dockCenterIndicator: document.getElementById("dock-center-indicator"),
+
+    // Tips一覧＆詳細
+    backFromTipsBtn: document.getElementById("back-from-tips-btn"),
+    tipsItemsList: document.getElementById("tips-items-list"),
+    backFromTipDetailBtn: document.getElementById("back-from-tip-detail-btn"),
+    tipBackBtnLabel: document.getElementById("tip-back-btn-label"),
+    tipDetailTitle: document.getElementById("tip-detail-title"),
+    tipDetailDesc: document.getElementById("tip-detail-desc"),
+    tipPhraseDisplay: document.getElementById("tip-phrase-display"),
+    tipCharsGrid: document.getElementById("tip-chars-grid"),
+    btnGoToConjugation: document.getElementById("btn-go-to-conjugation"),
+
+    // ポップアップモーダル
+    charPopupModal: document.getElementById("char-popup-modal"),
+    popupCloseBtn: document.getElementById("popup-close-btn"),
+    popupOkBtn: document.getElementById("popup-ok-btn"),
+    popupChar: document.getElementById("popup-char"),
+    popupMeaning: document.getElementById("popup-meaning"),
+    popupNote: document.getElementById("popup-note")
   };
 
   // 状態管理
@@ -55,6 +86,69 @@
   let currentStepIndex = 0;
   let totalSteps = 0;
   let isAnimating = false;
+  let studyReturnView = 'group'; // 'group' | 'home' | 'tip'
+  let currentTip = null;
+  let tipReturnToConjugation = false;
+
+  /**
+   * 画面の切り替え
+   * @param {'home'|'group'|'study'|'tipsList'|'tipDetail'} viewName 
+   */
+  function switchView(viewName) {
+    const allViews = [
+      dom.homeView,
+      dom.groupView,
+      dom.studyView,
+      dom.tipsListView,
+      dom.tipDetailView
+    ];
+
+    allViews.forEach((v) => {
+      if (v) {
+        v.classList.remove("active-view");
+        v.setAttribute("hidden", "true");
+      }
+    });
+
+    if (viewName === "home") {
+      dom.homeView.classList.add("active-view");
+      dom.homeView.removeAttribute("hidden");
+    } else if (viewName === "group") {
+      dom.groupView.classList.add("active-view");
+      dom.groupView.removeAttribute("hidden");
+    } else if (viewName === "study") {
+      dom.studyView.classList.add("active-view");
+      dom.studyView.removeAttribute("hidden");
+    } else if (viewName === "tipsList") {
+      dom.tipsListView.classList.add("active-view");
+      dom.tipsListView.removeAttribute("hidden");
+    } else if (viewName === "tipDetail") {
+      dom.tipDetailView.classList.add("active-view");
+      dom.tipDetailView.removeAttribute("hidden");
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  /**
+   * 助動詞名から語呂データを検索する
+   */
+  function findTipForVerb(verbName) {
+    if (!verbName || typeof tipsData === "undefined") return null;
+    return tipsData.find((t) => t.verbNames.includes(verbName)) || null;
+  }
+
+  /**
+   * カテゴリとグループを検索する
+   */
+  function findCategoryAndGroup(categoryId, groupId) {
+    for (const cat of connectionCategories) {
+      if (categoryId && cat.id !== categoryId) continue;
+      const group = cat.groups.find(g => g.id === groupId);
+      if (group) return { category: cat, group };
+    }
+    return null;
+  }
 
   /**
    * グループ内の学習ステップを構築する
@@ -77,7 +171,6 @@
     // 2. 「主な意味」ステップを登録（意味が完全に同じものは統合）
     const meaningGroups = [];
     group.items.forEach((item) => {
-      // 意味の名称リストを比較キーとする
       const meaningKey = item.meanings.map(m => m.name).join("||");
       const lastGroup = meaningGroups[meaningGroups.length - 1];
 
@@ -105,36 +198,13 @@
     return steps;
   }
 
-  /**
-   * 画面の切り替え
-   * @param {'home'|'group'|'study'} viewName 
-   */
-  function switchView(viewName) {
-    [dom.homeView, dom.groupView, dom.studyView].forEach((v) => {
-      v.classList.remove("active-view");
-      v.setAttribute("hidden", "true");
-    });
-
-    if (viewName === "home") {
-      dom.homeView.classList.add("active-view");
-      dom.homeView.removeAttribute("hidden");
-    } else if (viewName === "group") {
-      dom.groupView.classList.add("active-view");
-      dom.groupView.removeAttribute("hidden");
-    } else if (viewName === "study") {
-      dom.studyView.classList.add("active-view");
-      dom.studyView.removeAttribute("hidden");
-    }
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
   // =========================================================================
-  // ① ホーム画面: 接続ごとの一覧リスト表示
+  // ① ホーム画面: 検索機能 ＋ 接続一覧リスト ＋ 暗記お助けTips
   // =========================================================================
   function renderConnectionList() {
     dom.connectionList.innerHTML = "";
 
+    // 1〜5: 接続一覧
     connectionCategories.forEach((cat, idx) => {
       const card = document.createElement("div");
       card.className = "category-card";
@@ -166,6 +236,142 @@
 
       dom.connectionList.appendChild(card);
     });
+
+    // 6: 暗記お助けTips
+    const tipsCard = document.createElement("div");
+    tipsCard.className = "category-card tips-category-card";
+    tipsCard.setAttribute("role", "button");
+    tipsCard.setAttribute("tabindex", "0");
+    tipsCard.setAttribute("aria-label", "暗記お助けTips");
+
+    tipsCard.innerHTML = `
+      <div class="category-left">
+        <div class="category-number-badge">6</div>
+        <div class="category-name">
+          💡 暗記お助けTips
+          <span class="category-badge-count">${typeof tipsData !== "undefined" ? tipsData.length : 5}語</span>
+        </div>
+      </div>
+      <div class="category-arrow">&rsaquo;</div>
+    `;
+
+    tipsCard.addEventListener("click", () => {
+      openTipsListView();
+    });
+
+    tipsCard.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openTipsListView();
+      }
+    });
+
+    dom.connectionList.appendChild(tipsCard);
+  }
+
+  /**
+   * ① 検索処理（助動詞と主な意味でヒット、接続名を常に右側に表示）
+   */
+  function handleSearch() {
+    const rawQuery = dom.searchInput.value.trim();
+    dom.clearSearchBtn.hidden = rawQuery.length === 0;
+
+    if (!rawQuery) {
+      dom.searchResultsContainer.setAttribute("hidden", "true");
+      dom.connectionList.removeAttribute("hidden");
+      return;
+    }
+
+    const query = rawQuery.toLowerCase();
+    const results = [];
+
+    connectionCategories.forEach((cat) => {
+      cat.groups.forEach((group) => {
+        group.items.forEach((item) => {
+          const nameMatch = item.name.toLowerCase().includes(query);
+          const meaningMatch = item.meanings.some((m) => 
+            m.name.toLowerCase().includes(query) || (m.note && m.note.toLowerCase().includes(query))
+          );
+          const typeMatch = item.type ? item.type.toLowerCase().includes(query) : false;
+
+          if (nameMatch || meaningMatch || typeMatch) {
+            results.push({
+              item,
+              group,
+              category: cat
+            });
+          }
+        });
+      });
+    });
+
+    // 検索結果表示切り替え
+    dom.connectionList.setAttribute("hidden", "true");
+    dom.searchResultsContainer.removeAttribute("hidden");
+    dom.searchCountBadge.textContent = `${results.length}件ヒット`;
+    dom.searchResultsList.innerHTML = "";
+
+    if (results.length === 0) {
+      dom.searchResultsList.innerHTML = `
+        <div class="search-no-results">
+          該当する助動詞が見つかりません。<br>キーワードを変えてお試しください。
+        </div>
+      `;
+      return;
+    }
+
+    results.forEach(({ item, group, category }) => {
+      const card = document.createElement("div");
+      card.className = "search-result-card";
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("aria-label", `${item.name} (${category.name})`);
+
+      const meaningsSummary = item.meanings.map(m => m.name).join("・");
+
+      // 要件①: 常に助動詞表示の右に「〜接続」を表示
+      card.innerHTML = `
+        <div class="search-result-left">
+          <div class="search-result-top">
+            <span class="search-verb-name">${item.name}</span>
+            <span class="search-conn-name">(${category.name})</span>
+          </div>
+          <div class="search-result-meanings">主な意味: ${meaningsSummary}</div>
+        </div>
+        <div class="group-item-arrow">&rsaquo;</div>
+      `;
+
+      card.addEventListener("click", () => {
+        openStudyFromSearch(category, group, item.id);
+      });
+
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openStudyFromSearch(category, group, item.id);
+        }
+      });
+
+      dom.searchResultsList.appendChild(card);
+    });
+  }
+
+  /**
+   * 検索結果から直接学習画面を起動
+   */
+  function openStudyFromSearch(cat, group, targetVerbId) {
+    currentCategory = cat;
+    currentGroup = group;
+    groupSteps = buildGroupSteps(group);
+    
+    // 対象助動詞の活用表ステップを特定
+    let startStep = 0;
+    const foundIdx = groupSteps.findIndex(s => s.type === "conjugation" && s.verb && s.verb.id === targetVerbId);
+    if (foundIdx !== -1) {
+      startStep = foundIdx;
+    }
+    
+    startStudy(group, startStep, "home");
   }
 
   // =========================================================================
@@ -184,20 +390,19 @@
       card.setAttribute("aria-label", `${group.title}`);
 
       // 要件②: 「この時、意味・用法は記載しない。」
-      // タイトル（例：「る・らる」「す・さす・しむ・ず」等）のみを大きく表示
       card.innerHTML = `
         <div class="group-item-title">${group.title}</div>
         <div class="group-item-arrow">&rsaquo;</div>
       `;
 
       card.addEventListener("click", () => {
-        startStudy(group);
+        startStudy(group, 0, "group");
       });
 
       card.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          startStudy(group);
+          startStudy(group, 0, "group");
         }
       });
 
@@ -208,12 +413,112 @@
   }
 
   // =========================================================================
+  // ② 暗記お助けTips画面
+  // =========================================================================
+  function openTipsListView() {
+    dom.tipsItemsList.innerHTML = "";
+
+    if (typeof tipsData === "undefined" || !tipsData.length) {
+      dom.tipsItemsList.innerHTML = `<p class="intro-text">現在登録されているTipsはありません。</p>`;
+      switchView("tipsList");
+      return;
+    }
+
+    tipsData.forEach((tip) => {
+      const card = document.createElement("div");
+      card.className = "tip-item-card";
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("aria-label", `${tip.title}`);
+
+      card.innerHTML = `
+        <div class="tip-item-left">
+          <div class="tip-item-title">${tip.title}</div>
+          <div>
+            <span class="tip-phrase-badge">合言葉: ${tip.phrase}</span>
+          </div>
+        </div>
+        <div class="group-item-arrow">&rsaquo;</div>
+      `;
+
+      card.addEventListener("click", () => {
+        openTipDetailView(tip, false);
+      });
+
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openTipDetailView(tip, false);
+        }
+      });
+
+      dom.tipsItemsList.appendChild(card);
+    });
+
+    switchView("tipsList");
+  }
+
+  /**
+   * 語呂詳細画面を開く
+   */
+  function openTipDetailView(tip, fromConjugation = false) {
+    currentTip = tip;
+    tipReturnToConjugation = fromConjugation;
+
+    if (dom.tipBackBtnLabel) {
+      dom.tipBackBtnLabel.textContent = fromConjugation ? "活用表に戻る" : "Tips一覧";
+    }
+
+    dom.tipDetailTitle.textContent = tip.title;
+    dom.tipDetailDesc.textContent = tip.description;
+    dom.tipPhraseDisplay.textContent = tip.phrase;
+
+    // 各文字ボタンを生成（タップでポップアップ）
+    dom.tipCharsGrid.innerHTML = "";
+    tip.chars.forEach((charItem) => {
+      const btn = document.createElement("button");
+      btn.className = "tip-char-btn";
+      btn.setAttribute("type", "button");
+      btn.setAttribute("aria-label", `${charItem.char}の意味を見る`);
+      btn.innerHTML = `<span class="tip-char-btn-text">${charItem.char}</span>`;
+
+      btn.addEventListener("click", () => {
+        openCharPopup(charItem);
+      });
+
+      dom.tipCharsGrid.appendChild(btn);
+    });
+
+    switchView("tipDetail");
+  }
+
+  /**
+   * 文字タップ時のポップアップ表示
+   */
+  function openCharPopup(charItem) {
+    dom.popupChar.textContent = charItem.char;
+    dom.popupMeaning.textContent = charItem.meaning;
+    dom.popupNote.textContent = charItem.note || "";
+    dom.charPopupModal.removeAttribute("hidden");
+    dom.charPopupModal.setAttribute("aria-hidden", "false");
+  }
+
+  function closeCharPopup() {
+    dom.charPopupModal.setAttribute("hidden", "true");
+    dom.charPopupModal.setAttribute("aria-hidden", "true");
+  }
+
+  // =========================================================================
   // ③・④・⑤ 学習画面: 活用表全件 → 主な意味（共通統合）の順で表示
   // =========================================================================
-  function startStudy(group) {
+  function startStudy(group, initialStepIndex = 0, returnView = 'group') {
     currentGroup = group;
+    studyReturnView = returnView;
+    if (dom.backBtnLabel) {
+      dom.backBtnLabel.textContent = returnView === 'home' ? 'ホーム' : (returnView === 'tip' ? '語呂へ' : 'リスト');
+    }
     groupSteps = buildGroupSteps(group);
-    currentStepIndex = 0;
+    currentStepIndex = initialStepIndex;
     totalSteps = groupSteps.length;
     isAnimating = false;
     dom.studyDeckContainer.innerHTML = "";
@@ -226,7 +531,6 @@
    * @param {'forward'|'backward'|null} direction 
    */
   function renderCurrentStep(direction = null) {
-    // ヘッダーバッジと下部ドックの即時更新
     updateHeaderAndDock();
 
     const currentCard = dom.studyDeckContainer.querySelector(".study-card");
@@ -243,11 +547,10 @@
     isAnimating = true;
 
     if (direction === "forward") {
-      // 次へ進む: 現在のページが左へめくれ、下から新しいページが現れる
+      // 次へ進む（左スワイプ/次へボタン）
       currentCard.classList.add("page-turning-forward");
       newCard.classList.add("page-revealing-forward");
 
-      // 新しいカードを下に挿入
       dom.studyDeckContainer.insertBefore(newCard, currentCard);
 
       const finishForward = () => {
@@ -263,11 +566,10 @@
       setTimeout(finishForward, 480);
 
     } else if (direction === "backward") {
-      // 前へ戻る: 前のページが左からめくられて戻り、現在のページを覆う
+      // 前へ戻る（右スワイプ/前へボタン）
       currentCard.classList.add("page-hiding-backward");
       newCard.classList.add("page-revealing-backward");
 
-      // 新しいカードを最前面に追加
       dom.studyDeckContainer.appendChild(newCard);
 
       const finishBackward = () => {
@@ -295,19 +597,18 @@
     const step = groupSteps[stepIndex];
 
     if (step.type === "conjugation") {
-      // ③ 8行×2列 活用表カード（上詰め・ヘッダー削除）
+      // ③ 8行×2列 活用表カード
       return createConjugationCard(step.verb);
     } else {
-      // ④ 主な意味カード（同じ意味の助動詞はまとめて表示）
+      // ④ 主な意味カード
       return createMeaningsCard(step);
     }
   }
 
   /**
    * ③ 8行×2列 活用表カードの生成
-   * 1行目「基本形」と8行目「活用の型」は常時表示。
-   * 2〜7行目は最初は空白、タップで表示。
-   * 1行目の基本形タップで全マス一括表示。
+   * 要件③: 「すべて表示」ボタンを廃止し、左側に「もう一度隠す」ボタンを配置。
+   * 右側には語呂データがある場合は「語呂（暗記Tips）へ」ボタン、ない場合は空白を配置。
    */
   function createConjugationCard(verb) {
     const card = document.createElement("div");
@@ -426,27 +727,40 @@
     tableWrapper.appendChild(table);
     card.appendChild(tableWrapper);
 
-    // クイック操作ボタン（すべて表示 / もう一度隠す）
+    // 要件③: 「すべて表示」ボタンを廃止し、左に「もう一度隠す」、右に「語呂の画面へ」or空白
+    const tip = findTipForVerb(verb.name);
+
     const quickBar = document.createElement("div");
     quickBar.className = "table-quick-actions";
-    quickBar.innerHTML = `
-      <button class="quick-btn" id="btn-reveal-table">すべて表示</button>
-      <button class="quick-btn" id="btn-reset-table">もう一度隠す</button>
-    `;
 
-    quickBar.querySelector("#btn-reveal-table").addEventListener("click", () => {
-      hiddenCells.forEach((box) => {
-        box.classList.remove("is-hidden");
-        box.classList.add("is-revealed");
-      });
-    });
-
-    quickBar.querySelector("#btn-reset-table").addEventListener("click", () => {
+    // 左側ボタン: もう一度隠す
+    const resetBtn = document.createElement("button");
+    resetBtn.className = "quick-btn";
+    resetBtn.id = "btn-reset-table";
+    resetBtn.textContent = "🔄 もう一度隠す";
+    resetBtn.addEventListener("click", () => {
       hiddenCells.forEach((box) => {
         box.classList.remove("is-revealed");
         box.classList.add("is-hidden");
       });
     });
+    quickBar.appendChild(resetBtn);
+
+    // 右側ボタン: 語呂の画面がある場合はボタンを配置、ない場合は空白
+    if (tip) {
+      const tipBtn = document.createElement("button");
+      tipBtn.className = "quick-btn quick-btn-tip";
+      tipBtn.id = "btn-goto-tip";
+      tipBtn.textContent = `💡 語呂「${tip.phrase}」`;
+      tipBtn.addEventListener("click", () => {
+        openTipDetailView(tip, true);
+      });
+      quickBar.appendChild(tipBtn);
+    } else {
+      const placeholder = document.createElement("div");
+      placeholder.className = "quick-btn-placeholder";
+      quickBar.appendChild(placeholder);
+    }
 
     card.appendChild(quickBar);
     return card;
@@ -454,8 +768,6 @@
 
   /**
    * ④ 主な意味カードの生成
-   * 助動詞がまとめられている場合は「る・らる」のように連名で表示
-   * 空白の数は「主な意味」の数と完全に一致
    */
   function createMeaningsCard(step) {
     const card = document.createElement("div");
@@ -463,7 +775,7 @@
 
     const meaningCount = step.meanings.length;
 
-    // カードヘッダー（対象助動詞の名称を表示: 例「る・らる」「す・さす・しむ」）
+    // カードヘッダー（注記テキストは一切非表示）
     card.innerHTML = `
       <div class="card-header-bar">
         <div class="card-title-group">
@@ -547,7 +859,8 @@
   }
 
   /**
-   * グループ完了画面カードの生成
+   * ④ グループ完了画面カードの生成
+   * 要件④: 「〜の学習完了！」「繰り返し復習することが重要です！」の表記
    */
   function createCompletionCard() {
     const card = document.createElement("div");
@@ -555,8 +868,8 @@
 
     card.innerHTML = `
       <div class="complete-icon">🎉</div>
-      <h3 class="complete-title">「${currentGroup.title}」の暗記完了！</h3>
-      <p class="complete-desc">活用表と主な意味のチェックが終わりました。<br>繰り返し復習して完璧に定着させましょう。</p>
+      <h3 class="complete-title">「${currentGroup.title}」の学習完了！</h3>
+      <p class="complete-desc">活用表と主な意味のチェックが終わりました。<br>繰り返し復習することが重要です！</p>
       <div class="complete-btn-group">
         <button class="nav-btn" style="width: 100%; justify-content: center; padding: 12px;" id="restart-group-btn">
           🔄 もう一度最初から復習する
@@ -573,17 +886,20 @@
     });
 
     card.querySelector("#back-to-group-list-btn").addEventListener("click", () => {
-      switchView("group");
+      if (studyReturnView === 'home') {
+        switchView("home");
+      } else {
+        switchView("group");
+      }
     });
 
     return card;
   }
 
   /**
-   * 上部バッジと下部ドック操作の更新（右ボタン: 次へ、左ボタン: 前へ）
+   * 上部バッジと下部ドック操作の更新
    */
   function updateHeaderAndDock() {
-    // 完了ステップの場合
     if (currentStepIndex >= totalSteps) {
       dom.studyStepBadge.textContent = "学習完了！";
       dom.dockPrevBtn.disabled = false;
@@ -595,7 +911,7 @@
     const currentStep = groupSteps[currentStepIndex];
     const typeLabel = currentStep.type === "conjugation" ? "活用表" : "主な意味";
 
-    // 上部バッジ更新（例: 「る [活用表] (1 / 3)」や「る・らる [主な意味] (3 / 3)」）
+    // 上部バッジ更新
     dom.studyStepBadge.textContent = `${currentStep.title} [${typeLabel}] (${currentStepIndex + 1} / ${totalSteps})`;
 
     // 左ボタン（前へ）
@@ -664,7 +980,7 @@
         const deltaY = e.changedTouches[0].clientY - touchStartY;
         const duration = Date.now() - touchStartTime;
 
-        // 横方向のスワイプ判定（上下の微小なスクロールと区別するため abs(deltaX) > abs(deltaY) * 1.2）
+        // 横方向のスワイプ判定
         if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2 && duration < 600) {
           if (deltaX < -35) {
             // 指を左方向にスライド（次のページへ進む）
@@ -682,18 +998,31 @@
   // イベントリスナー登録
   // =========================================================================
   function setupEventListeners() {
-    // 画面上部ヘッダー（ネイビー部分含む）タップでホーム画面に戻る
+    // 画面上部ヘッダータップでホーム画面に戻る
     if (dom.appHeaderNav) {
       dom.appHeaderNav.addEventListener("click", () => {
+        // 検索をリセット
+        dom.searchInput.value = "";
+        handleSearch();
         switchView("home");
       });
       dom.appHeaderNav.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
+          dom.searchInput.value = "";
+          handleSearch();
           switchView("home");
         }
       });
     }
+
+    // 検索入力イベント
+    dom.searchInput.addEventListener("input", handleSearch);
+    dom.clearSearchBtn.addEventListener("click", () => {
+      dom.searchInput.value = "";
+      handleSearch();
+      dom.searchInput.focus();
+    });
 
     // 画面遷移ボタン
     dom.backToHomeBtn.addEventListener("click", () => {
@@ -701,15 +1030,57 @@
     });
 
     dom.backToGroupsBtn.addEventListener("click", () => {
-      switchView("group");
+      if (studyReturnView === 'home') {
+        switchView("home");
+      } else if (studyReturnView === 'tip') {
+        switchView("tipDetail");
+      } else {
+        switchView("group");
+      }
+    });
+
+    // Tips画面のナビゲーション
+    dom.backFromTipsBtn.addEventListener("click", () => {
+      switchView("home");
+    });
+
+    dom.backFromTipDetailBtn.addEventListener("click", () => {
+      if (tipReturnToConjugation) {
+        switchView("study");
+      } else {
+        switchView("tipsList");
+      }
+    });
+
+    // Tips詳細から「活用表を表示」ボタン
+    dom.btnGoToConjugation.addEventListener("click", () => {
+      if (!currentTip) return;
+      const found = findCategoryAndGroup(currentTip.categoryId, currentTip.groupId);
+      if (found) {
+        currentCategory = found.category;
+        openStudyFromSearch(found.category, found.group, currentTip.verbId);
+      }
+    });
+
+    // ポップアップモーダルを閉じる
+    dom.popupCloseBtn.addEventListener("click", closeCharPopup);
+    dom.popupOkBtn.addEventListener("click", closeCharPopup);
+    dom.charPopupModal.addEventListener("click", (e) => {
+      if (e.target === dom.charPopupModal) {
+        closeCharPopup();
+      }
     });
 
     // 下部ドックボタン（右ボタン: 次へ、左ボタン: 前へ）
     dom.dockNextBtn.addEventListener("click", goToNextStep);
     dom.dockPrevBtn.addEventListener("click", goToPrevStep);
 
-    // キーボード操作対応（PC / Mac / iPad外付けキーボードで右キー・左キー対応）
+    // キーボード操作対応
     window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !dom.charPopupModal.hasAttribute("hidden")) {
+        closeCharPopup();
+        return;
+      }
       if (!dom.studyView.classList.contains("active-view")) return;
       if (e.key === "ArrowRight") {
         goToNextStep();
