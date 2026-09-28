@@ -1248,7 +1248,39 @@ body {
 }
 
 .tip-actions-bar {
-  margin-top: 8px;
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.tip-goto-conj-btn {
+  flex: none;
+  min-width: 180px;
+  max-width: 220px;
+  padding: 8px 16px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: #f8fafc;
+  color: var(--color-text-main);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.tip-goto-conj-btn:hover {
+  background-color: #edf2f7;
+  border-color: var(--color-border-dark);
+}
+
+.tip-goto-conj-btn:active {
+  background-color: #e2e8f0;
+  transform: scale(0.97);
 }
 
 /* ==========================================================================
@@ -1353,6 +1385,19 @@ body {
   width: 100%;
   padding: 10px;
   font-size: 0.9rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(30, 58, 95, 0.25);
+  transition: all var(--transition-fast);
+}
+
+.popup-ok-btn:active {
+  background-color: var(--color-primary-light);
+  transform: scale(0.98);
 }
 
 /* ==========================================================================
