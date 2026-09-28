@@ -434,12 +434,17 @@
       card.className = "tip-item-card";
       card.setAttribute("role", "button");
       card.setAttribute("tabindex", "0");
-      card.setAttribute("aria-label", `${tip.title}`);
+      const verbsText = (tip.verbNames && tip.verbNames.length) ? tip.verbNames.join("・") : tip.title;
+      const connText = tip.connectionName || "";
+      card.setAttribute("aria-label", `${verbsText} (${connText})`);
 
-      // 要件③: 「む・むず 未然形接続」のみ表示（合言葉は表示しない）
+      // 助動詞は大きく明朝体、接続名は小さく控えめなフォントで表示
       card.innerHTML = `
         <div class="tip-item-left">
-          <div class="tip-item-title">${tip.title}</div>
+          <div class="tip-item-title-group">
+            <span class="tip-verb-name">${verbsText}</span>
+            ${connText ? `<span class="tip-conn-name">${connText}</span>` : ""}
+          </div>
         </div>
         <div class="group-item-arrow">&rsaquo;</div>
       `;
@@ -472,7 +477,12 @@
       dom.tipBackBtnLabel.textContent = fromConjugation ? "活用表に戻る" : "Tips一覧";
     }
 
-    dom.tipDetailTitle.textContent = tip.title;
+    const verbsText = (tip.verbNames && tip.verbNames.length) ? tip.verbNames.join("・") : tip.title;
+    const connText = tip.connectionName || "";
+    dom.tipDetailTitle.innerHTML = `
+      <span class="tip-verb-name">${verbsText}</span>
+      ${connText ? `<span class="tip-conn-name">${connText}</span>` : ""}
+    `;
     if (dom.tipDetailDesc) {
       dom.tipDetailDesc.textContent = "文字をタップすると主な意味が表示されます";
     }

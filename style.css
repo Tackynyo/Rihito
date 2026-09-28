@@ -1122,6 +1122,34 @@ body {
   gap: 4px;
 }
 
+.tip-item-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tip-verb-name {
+  font-family: "Shippori Mincho", serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.tip-conn-name {
+  font-family: "Zen Kaku Gothic New", -apple-system, BlinkMacSystemFont, "Yu Gothic", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4a5568;
+  background-color: #edf2f7;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
 .tip-item-title {
   font-family: "Shippori Mincho", serif;
   font-size: 1.25rem;
@@ -1163,6 +1191,10 @@ body {
   font-weight: 800;
   color: var(--color-primary);
   margin-bottom: 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .tip-target-desc {
