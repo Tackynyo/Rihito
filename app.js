@@ -23,7 +23,7 @@
     { key: "rentai", label: "連体形", isAlwaysVisible: false },
     { key: "izen", label: "已然形", isAlwaysVisible: false },
     { key: "meirei", label: "命令形", isAlwaysVisible: false },
-    { key: "type", label: "活用の型", isAlwaysVisible: true }
+    { key: "type", label: "活用の型", isAlwaysVisible: false }
   ];
 
   // DOM要素のキャッシュ
@@ -707,27 +707,21 @@
 
         tdLeft.appendChild(kihonCell);
 
-      } else if (rowDef.key === "type") {
-        // 8行目: 活用の型（常に表示）
-        const typeCell = document.createElement("div");
-        typeCell.className = "type-static-cell";
-        typeCell.textContent = rawVal;
-        tdLeft.appendChild(typeCell);
-
       } else {
-        // 2行目〜7行目（未然形〜命令形）: 初期状態は空白、タップで表示
+        // 2行目〜8行目（未然形〜命令形、活用の型）: 初期状態は空白、タップで表示
         const box = document.createElement("div");
         box.className = "cell-box is-hidden";
         box.setAttribute("role", "button");
         box.setAttribute("tabindex", "0");
         box.setAttribute("aria-label", `${rowDef.label}を表示`);
 
+        const isLongText = rawVal.length >= 5;
         box.innerHTML = `
           <div class="cell-cover-text">
             <span>？</span>
             <span>タップ</span>
           </div>
-          <span class="cell-answer-text">${rawVal}</span>
+          <span class="cell-answer-text${isLongText ? " cell-answer-long" : ""}">${rawVal}</span>
         `;
 
         const toggleCell = () => {

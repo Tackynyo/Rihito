@@ -697,6 +697,12 @@ body {
   font-weight: 800;
   color: var(--color-accent);
   letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.cell-box.is-revealed .cell-answer-text.cell-answer-long {
+  font-size: 1.02rem;
+  letter-spacing: 0.01em;
 }
 
 /* 表の下のクイック操作ボタン */
